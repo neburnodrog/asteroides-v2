@@ -9,3 +9,5 @@ CLAUDE.local.md
 
 .playwright-test
 .playwright-mcp
+.vercel
+.env*
