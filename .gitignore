@@ -11,3 +11,6 @@ CLAUDE.local.md
 .playwright-mcp
 .vercel
 .env*
+
+# Local planning scratch, not shared
+tasks/features .md
