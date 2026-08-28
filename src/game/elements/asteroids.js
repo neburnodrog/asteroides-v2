@@ -61,9 +61,10 @@ export default class Asteroids {
     };
 
     draw() {
+        this.asteroidDebris = this.asteroidDebris.filter(debris => !debris.faded);
+
         this.array.forEach(asteroid => asteroid.draw());
         this.asteroidDebris.forEach(debris => debris.draw());
-        // this.asteroidDebris = this.asteroidDebris.filter(debris => debris.faded === false);
     }
 }
 
@@ -112,7 +113,7 @@ class Asteroid {
     }
 
     calcPosition() {
-        const { width, height } = { ...this.p5 }
+        const { width, height } = this.p5;
 
         this.position.x += this.velocity.x;
         this.position.y += this.velocity.y;

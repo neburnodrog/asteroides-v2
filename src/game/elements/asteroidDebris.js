@@ -12,7 +12,7 @@ export default class AsteroidDebris {
         this.direction = Math.random() * 2 * Math.PI;
         this.rotation = { angle: 0, velocity: Math.random() / 40 }
         this.velocity = this.calcInitialVelocityVectors();
-        // this.faded = false;
+        this.faded = false;
     }
 
     getInitialColor() {
@@ -32,7 +32,7 @@ export default class AsteroidDebris {
             },
             stroke: {
                 R: randomInteger(0, 250),
-                B: randomInteger(0, 250),
+                G: randomInteger(0, 250),
                 B: randomInteger(0, 250),
                 A: maxAlpha,
             },
@@ -69,7 +69,7 @@ export default class AsteroidDebris {
 
         if (this.color.stroke.A > 0) {
             this.color.stroke.A -= 2;
-        } //else this.faded = true;
+        } else this.faded = true;
     }
 
 

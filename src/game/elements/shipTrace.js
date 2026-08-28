@@ -1,5 +1,9 @@
 import { randomInteger } from '../helpers';
 
+// Tuned so a trace lives ~12 frames, matching the lifetime of the per-trace
+// setTimeout this replaced.
+const FADE_PER_FRAME = 20;
+
 export default class ShipTrace {
     constructor(p5, ship) {
         this.p5 = p5;
@@ -8,9 +12,6 @@ export default class ShipTrace {
         this.color = this.getInitialColor();
         this.position = this.getInitialPosition({ ...ship.position });
         this.faded = false;
-        setTimeout(() => {
-            this.faded = true;
-        }, 400 * Math.random());
     }
 
     getInitialColor() {
@@ -23,7 +24,7 @@ export default class ShipTrace {
             },
             stroke: {
                 R: randomInteger(200, 255),
-                B: randomInteger(0, 255),
+                G: randomInteger(0, 255),
                 B: randomInteger(0, 125),
                 A: randomInteger(200, 255),
             },
@@ -39,15 +40,10 @@ export default class ShipTrace {
     }
 
     calcColor() {
-        if (this.color.fill.A > 0) {
-            this.color.fill.A -= 5;
-        }
+        this.color.fill.A -= FADE_PER_FRAME;
+        this.color.stroke.A -= FADE_PER_FRAME;
 
-        if (this.color.stroke.A > 0) {
-            this.color.stroke.A -= 5;
-        }
-
-        if (this.color.fill < 0 && this.color.stroke < 0) {
+        if (this.color.fill.A <= 0 && this.color.stroke.A <= 0) {
             this.faded = true;
         }
     }

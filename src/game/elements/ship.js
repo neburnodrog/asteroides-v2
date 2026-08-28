@@ -113,12 +113,13 @@ export default class Ship {
 
   /** EVENTS => triggered in game.js */
   handleExplosion() {
+    const origin = { ...this.position };
     this.exploded = true;
     this.position = { x: null, y: null };
     const randomDebris = randomInteger(30, 40);
     this.shipDebris = new Array(randomDebris)
       .fill()
-      .map(() => new ShipDebris(this.p5, this));
+      .map(() => new ShipDebris(this.p5, origin));
   }
 
   createTraces() {
@@ -127,11 +128,14 @@ export default class Ship {
 
   /** CLEANUP */
   filterOldShots() {
+    const { width, height } = this.p5;
     this.shots = this.shots.filter(
       (shot) =>
-        0 < shot.position.x < this.p5.width &&
-        0 < shot.position.y < this.p5.height &&
-        shot.hit === false
+        shot.hit === false &&
+        shot.position.x >= 0 &&
+        shot.position.x <= width &&
+        shot.position.y >= 0 &&
+        shot.position.y <= height
     );
   }
 
@@ -149,15 +153,19 @@ export default class Ship {
   draw() {
     const { p5 } = this;
 
-    // USER ACTIONS
-    this.rotateShip(p5);
-    this.accelerate(p5);
-    this.brakes(p5);
+    // A dead ship stops steering and stops shooting, but its shots, traces and
+    // debris keep running until they expire.
+    if (!this.exploded) {
+      // USER ACTIONS
+      this.rotateShip();
+      this.accelerate();
+      this.brakes();
 
-    // CALCULATIONS
-    this.velocity = this.calcVelocity();
-    this.position = this.calcPosition();
-    this.position = this.ifOverflowed(p5);
+      // CALCULATIONS
+      this.velocity = this.calcVelocity();
+      this.position = this.calcPosition();
+      this.position = this.ifOverflowed();
+    }
 
     // CLEANUP
     this.filterOldShots();
@@ -177,8 +185,8 @@ export default class Ship {
       p5.rotate(this.angleOfShip);
       p5.image(this.image, 5, 0, this.shipLength, this.shipWidth);
       p5.pop();
-    }
 
-    this.fireIfPressed();
+      this.fireIfPressed();
+    }
   }
 }

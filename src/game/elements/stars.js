@@ -6,7 +6,15 @@ export default class Stars {
     }
 
     draw() {
-        this.stars.map(star => star.draw());
+        const p5 = this.p5;
+
+        p5.push();
+        p5.stroke('#AFE4FF');
+        p5.strokeWeight(3);
+
+        this.stars.forEach(star => star.draw());
+
+        p5.pop();
     }
 }
 
@@ -20,12 +28,7 @@ class Star {
     }
 
     draw() {
-        const p5 = this.p5;
-
-        p5.push();
-        p5.stroke('#AFE4FF');
-        p5.strokeWeight(3);
-        p5.point(this.position.x, this.position.y);
-        p5.pop();
+        // Stroke and weight are set once by Stars.draw for the whole field.
+        this.p5.point(this.position.x, this.position.y);
     }
 }

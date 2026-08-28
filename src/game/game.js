@@ -124,10 +124,7 @@ export default class Game {
 
     // RENDER ELEMENTS
     this.asteroids.draw();
-    if (this.ship.exploded) {
-    } else {
-      this.ship.draw();
-    }
+    this.ship.draw();
     this.lifes.forEach((life, i) => life.draw(i + 1));
     this.score.draw();
   }
