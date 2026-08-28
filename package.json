@@ -1,7 +1,7 @@
 {
-    "name": "asteroides",
+    "name": "asteroides-v2",
     "version": "1.0.0",
-    "description": "p5.js Asteroids game",
+    "description": "p5.js Asteroids game, v2",
     "main": "src/index.js",
     "private": true,
     "scripts": {
@@ -14,14 +14,14 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/neburnodrog/-asteroids-.git"
+        "url": "git+https://github.com/neburnodrog/asteroides-v2.git"
     },
     "author": "",
     "license": "ISC",
     "bugs": {
-        "url": "https://github.com/neburnodrog/-asteroids-/issues"
+        "url": "https://github.com/neburnodrog/asteroides-v2/issues"
     },
-    "homepage": "https://github.com/neburnodrog/-asteroids-#readme",
+    "homepage": "https://github.com/neburnodrog/asteroides-v2#readme",
     "devDependencies": {
         "@babel/core": "^7.26.0",
         "@babel/preset-env": "^7.26.0",
