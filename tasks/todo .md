@@ -159,9 +159,9 @@ the third hunk in its diff.
 
 ### Follow-ups
 
-- Backlog item 22, the test runner, is now cheaper. `run.js` joins `collisions.js`,
-  `gameState.js` and `helpers.js` as a module testable without a canvas, and `Run` is where the
-  arithmetic that decides a game lives.
+- Backlog item 22 is answered, differently than it proposed. Instead of Vitest over the p5 free
+  modules, there is now a Playwright suite in `e2e/` driving the real game through a harness. 17
+  specs, 7 seconds. A unit runner is still an option later, but the run rules are covered.
 - Items 12, 15, 16 and 21 (combo, power-ups, shield, run stats) now have somewhere to go.
 - The next deepening from the same review is candidate 2: stop passing the whole `Game` into
   `Ship` and the screen classes. Both screens still reach through `this.game.run`.

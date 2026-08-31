@@ -36,6 +36,19 @@ export const Canvas = new p5((p5) => {
     game = new Game(p5, soundManager, input, run, current, { ship, heart });
   };
 
+  const attachTestHarnessIfAsked = () => {
+    // The NODE_ENV test has to stay inline like this. Webpack folds it at parse time, so a
+    // production build never registers the dynamic import and emits no chunk for the harness.
+    // Reading it into a variable first defeats that and ships the module. See e2e/README.md.
+    if (process.env.NODE_ENV !== "production") {
+      if (!window.location.search.includes("e2e=1")) return;
+
+      import("./game/harness.js").then(({ attachHarness }) => {
+        attachHarness({ p5, run, getGame: () => game });
+      });
+    }
+  };
+
   p5.preload = () => {
     ship = p5.loadImage(shipImage);
     heart = p5.loadImage(heartImage);
@@ -50,6 +63,7 @@ export const Canvas = new p5((p5) => {
     background = new Background(p5);
     resetSketch("menu");
     p5.textFont(spaceQuest);
+    attachTestHarnessIfAsked();
   };
 
   p5.draw = () => {

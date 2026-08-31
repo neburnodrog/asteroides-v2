@@ -9,8 +9,27 @@ Browser-based Asteroids arcade game clone built with p5.js and bundled with Webp
 - Build (prod): `npm run build:prod`
 - Watch: `npm run watch`
 - Deploy: `npm run deploy` (pushes `dist/` to gh-pages branch)
+- E2E tests: `npm run test:e2e` (Playwright starts the dev server itself)
+- E2E tests, watch mode: `npm run test:e2e:ui`
+- Dev server without opening a browser: `npm run start:test`
 - Node version: see `.nvmrc` (v24)
-- **No test runner, linter, or formatter is configured.** Do not invent commands — if I ask you to "run tests", clarify with me first.
+- **Playwright is the only test runner. There is no unit test runner, linter, or formatter.** Do not invent commands beyond the ones listed here.
+
+## Testing
+
+E2E tests live in `e2e/` and run against a real browser. Read `e2e/README.md` before writing
+one. The short version:
+
+- The game is a canvas, so there is nothing in the DOM to assert on. `src/game/harness.js`
+  exposes arrangement verbs on `window.__asteroides` and `e2e/fixtures.mjs` wraps them.
+- The pattern is freeze, arrange, step, snapshot, assert. Every frame comes from an explicit
+  `a.step()`. Never write a test that waits and then checks: asteroids drift, the ship dies, and
+  a shot crosses the whole canvas in under a second.
+- Specs call verbs (`a.putAsteroidsOnShip(2)`), never fields. If a test needs something the
+  harness cannot express, add a verb rather than reaching into the game from the spec.
+- Add the verb name to `VERBS` in `e2e/fixtures.mjs` or it will not be callable.
+- The harness attaches only in a development build loaded with `?e2e=1`. See the invariant in
+  ARCHITECTURE.md before touching that check.
 
 ## Code Style
 

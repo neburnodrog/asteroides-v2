@@ -10,7 +10,10 @@
         "build:prod": "webpack --mode=production",
         "watch": "webpack --watch",
         "start": "webpack serve --mode=development",
-        "deploy": "gh-pages -d dist"
+        "deploy": "gh-pages -d dist",
+        "start:test": "webpack serve --mode=development --no-open",
+        "test:e2e": "playwright test",
+        "test:e2e:ui": "playwright test --ui"
     },
     "repository": {
         "type": "git",
@@ -25,6 +28,7 @@
     "devDependencies": {
         "@babel/core": "^7.26.0",
         "@babel/preset-env": "^7.26.0",
+        "@playwright/test": "^1.62.1",
         "babel-loader": "^10.0.0",
         "css-loader": "^7.1.2",
         "gh-pages": "^6.2.0",

@@ -6,7 +6,7 @@
 
 The application boots a single p5 instance in `src/index.js`. The p5 instance owns the render loop (`preload → setup → draw` at 60fps) and is passed by reference into every game class. A central `Game` object dispatches each frame to one of five states (`menu`, `playing`, `dying`, `levelComplete`, `gameOver`) owned by a `GameState` module. Game state transitions (new level, restart after death, "start game" from menu) are implemented by reconstructing the `Game` instance from `index.js` in response to `state.nextState`, which names the state the fresh `Game` starts in. Score, lives, and level survive the rebuild because a `Run` module owns them and outlives every `Game`.
 
-Domain vocabulary lives in `CONTEXT.md`. There are no external services, no persistence layer, and no tests. The only runtime dependency is `p5` (with its `p5.sound` addon).
+Domain vocabulary lives in `CONTEXT.md`. There are no external services and no persistence layer. Tests are end to end only: Playwright drives a real browser against a small harness, and there is no unit test runner. The only runtime dependency is `p5` (with its `p5.sound` addon).
 
 ## Module Map
 
@@ -15,6 +15,7 @@ Domain vocabulary lives in `CONTEXT.md`. There are no external services, no pers
 | Bootstrap | `src/index.js` | p5 instance creation, asset preload, top-level state reset wiring | `index.js` |
 | Game Controller | `src/game/` | Per-life Game instance, state-machine dispatch, collision response, and the run scoped score, lives and level | `game.js`, `gameState.js`, `run.js`, `input.js`, `collisions.js`, `soundManager.js`, `helpers.js` |
 | Entities | `src/game/elements/` | Ship, Asteroids, Shot, Debris, Scoreboard, Background, Stars. All class-based, all own their own `draw()` | `ship.js`, `asteroids.js`, `shot.js`, `debris.js`, `asteroidDebris.js`, `shipDebris.js`, `shipTrace.js`, `background.js`, `stars.js`, `scoreboard.js` |
+| Test seam | `src/game/harness.js`, `e2e/` | Arrangement verbs exposed to Playwright, plus the spec suite | `harness.js`, `e2e/fixtures.mjs`, `e2e/*.spec.mjs`, `playwright.config.mjs` |
 | Screens | `src/game/state/` | Non-playing game states rendered as full-canvas overlays | `startMenuScreen.js` (exports `StartMenuScreen` and `LevelUpScreen`), `gameOverScreen.js` |
 | Assets | `src/{font,images,sounds,css}/` | Static assets imported via ES modules and bundled by Webpack's `type: "asset"` rule | `font/SpaceQuest-yOY3.ttf`, `images/ship.png`, `images/heart.png`, `sounds/*.wav` |
 | Build | `webpack.config.js`, `.babelrc` | Bundling, dev server (HMR on :8080), asset loaders, `p5` ProvidePlugin | `webpack.config.js` |
@@ -26,6 +27,9 @@ Domain vocabulary lives in `CONTEXT.md`. There are no external services, no pers
 - **State machine**: `src/game/gameState.js` — owns `state.current`, the legal transitions (`startPlaying`, `shipDied`, `levelCleared`, `acknowledgeLevelUp`, `acknowledgeGameOver`), the 3-second `Dying` timer, and the `nextState` signal that `index.js` polls to trigger `resetSketch`. It never sees score, lives, or level.
 - **Input dispatcher**: `src/game/input.js` — single owner of `p5.keyPressed` and the action vocabulary (`thrust`, `brake`, `rotateLeft`, `rotateRight`, `shoot`, `confirm`). Exposes `isHeld(action)` for held inputs and `wasPressed(action)` (consume-on-read) for one-shots. Constructed once in `index.js`; survives `Game` reconstructions.
 - **Run state**: `src/game/run.js`. Score, lives and level as plain numbers, plus the four transitions that change them (`addPoints`, `loseLife`, `nextLevel`, `reset`). Constructed once in `index.js`, handed to every `Game`. Imports nothing, holds no p5 reference.
+- **Test seam**: `src/game/harness.js`. Arrangement verbs for the e2e suite: frame stepping, a JSON
+  snapshot, and verbs that place asteroids and set run values. Attached to `window.__asteroides`
+  only by a development build loaded with `?e2e=1`.
 - **Collision detection**: `src/game/collisions.js` — two pure functions, `shipVsAsteroids(ship, asteroids)` and `shotsVsAsteroids(shots, asteroids)`. Imports nothing, holds no state, never touches p5. `Game` calls them and owns every consequence.
 - **Player entity**: `src/game/elements/ship.js` — physics integration, shot/trace/debris spawning, screen-wrap. Reads input via `this.game.input.isHeld(...)` / `wasPressed(...)`.
 - **Asteroid system**: `src/game/elements/asteroids.js` — spawns initial wave per `level`, handles splitting (`X` → `M` → `S`) on hit, owns the asteroid array.
@@ -42,6 +46,16 @@ Domain vocabulary lives in `CONTEXT.md`. There are no external services, no pers
 - **Lives include the ship in play.** `Run` starts at 3 and `loseLife()` returns `true` when the count reaches 0, so the third death ends the run. Do not reintroduce a separate "was this the last life" test in `Game`.
 - **Entities own their own cleanup.** Each entity class filters its own dead children (`filterOldShots`, `filterOldTraces`, `filterOldShipDebris`, `cleanExplodedAsteroids`). New entity types must follow the same pattern; do not add cleanup logic to `Game.playGame()`.
 - **Collision detection runs before rendering each frame.** `playGame()` order is: `checkIfCollisions → checkForHits → checkIfExplodedAsteroids → checkIfLevelCompleted → draw entities`. Do not reorder — collision flags drive what the entities render on the same frame.
+- **The harness is gated twice, and the compile-time gate is fragile.** `index.js` tests
+  `process.env.NODE_ENV !== "production"` inline in the `if`, so webpack folds the branch at parse
+  time and a production build emits no chunk for `harness.js`. Reading that check into a variable
+  first defeats the fold and puts the module in `dist/`. A development build does emit the chunk,
+  including the one `npm run build` produces for `npm run deploy`, and there the `?e2e=1` check is
+  what keeps it inert. Vercel builds with `build:prod`, so nothing deployed there carries it.
+  Verify with `npm run build:prod` and grep `dist/` for `__asteroides`.
+- **E2E specs call harness verbs, never game fields.** A spec that reaches into `game.asteroids`
+  or `run.score` directly has to be rewritten by the next refactor, which is the whole reason the
+  harness exists. Add a verb instead, and register it in `VERBS` in `e2e/fixtures.mjs`.
 - **Asset references must be ES imports.** Webpack's `type: "asset"` rule resolves them at build time. String URLs to `public/` or `dist/` will not work, and adding `require()` calls will conflict with the `.babelrc` `modules: false` setting.
 - **Document-level keydown guard must remain.** The handler at the bottom of `index.js` prevents the browser from scrolling when arrows/space are pressed. Removing it breaks gameplay. (Distinct from the `Input` module — the guard is browser-scroll suppression, not game-action mapping.)
 - **Entity-vs-entity geometry lives only in `src/game/collisions.js`.** No other module measures overlap between two entities. The module is pure: no imports, no state, no p5. It reports hits and never applies them, so scoring, sound, lives, and state transitions stay in `Game`. (The 300px spawn-exclusion check in `asteroids.js` is placement, not collision, and stays where it is.)
@@ -139,6 +153,36 @@ already owns the `Run` and already decides when to rebuild, so the reset belongs
 decision, and `GameState` stays free of dependencies. Rejected too: moving the points column of
 `ASTEROID_HITS` into `Run`. It would split one table across two modules and add a second lookup
 per hit to buy nothing.
+
+### Why the e2e suite drives a harness rather than the canvas
+
+The game renders to a canvas, so a black-box test has nothing to assert on beyond pixels.
+Screenshot comparison was rejected: the background is 500 randomly placed stars, and every
+asteroid has a random radius, side count and rotation, so a pixel diff would fail on noise.
+
+Driving the game live and sampling it also fails, and did fail. A first pass at verifying the
+`Run` extraction pressed keys and read state between round trips. Asteroids drifted into the
+ship, two deaths happened between calls, and shots crossed the canvas before they could be
+counted. Nothing about that pass was reproducible.
+
+What works is owning both clocks. Frames advance only through `p5.redraw()` after
+`p5.noLoop()`, and the only wall-clock dependency in the engine, the respawn timer, is
+shortened through `setRespawnDelay` so the timer path stays under test instead of being
+bypassed. The RNG is never seeded, because a test that places the asteroids it cares about does
+not care what the RNG chose. Seeding would mean threading a generator through five files for no
+gain here.
+
+The harness exposes verbs, not objects. `putAsteroidsOnShip(2)` rather than a handle on
+`game.asteroids.array`. The suite therefore names no field that a refactor can move, which is
+the same reason `Input` exposes `isHeld(action)` rather than a keycode.
+
+One test earns its place twice. `shipVsAsteroids` is guarded during `dying` by two independent
+mechanisms: the `isPlaying()` early return in `Game.checkIfCollisions`, and the fact that
+`handleExplosion` sets the ship position to `{ x: null, y: null }`. That second one collapses the
+dead ship's hitbox onto the top left corner rather than removing it, so an asteroid parked on the
+wreck no longer overlaps anything. Removing the documented guard therefore breaks nothing that a
+naive test would notice. The corner test in `e2e/deaths.spec.mjs` places an asteroid at the
+origin and is the only spec that fails when the guard goes.
 
 ### Why `module.hot.decline()` in `src/index.js`
 p5's `preload` → `setup` lifecycle binds to the module-scope variables (`spaceQuest`, `ship`, `heart`) at first load. When webpack HMR hot-replaces `index.js`, the new module re-runs and resets those `let` bindings to `undefined`, but p5 does not re-run `preload` — so `setup` can fire (triggered by an async preload-tracker decrement from `p5.sound`) with `spaceQuest` still `undefined`, and `p5.textFont(null)` throws. Declining HMR forces a full page reload on edits, which re-runs the entire lifecycle.
