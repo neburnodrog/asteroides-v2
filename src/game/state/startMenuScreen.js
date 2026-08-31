@@ -31,7 +31,7 @@ export class StartMenuScreen {
 
     p5.textSize(32);
     p5.text(
-      this.level.text + this.game.level.toString(),
+      this.level.text + this.game.run.level.toString(),
       this.level.position.x,
       this.level.position.y
     );
@@ -62,10 +62,6 @@ export class LevelUpScreen extends StartMenuScreen {
   }
 
   _onConfirm() {
-    this.game.state.acknowledgeLevelUp({
-      level: this.game.level,
-      score: this.game.score,
-      lifes: this.game.lifes,
-    });
+    this.game.state.acknowledgeLevelUp();
   }
 }

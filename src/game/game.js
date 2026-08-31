@@ -6,9 +6,8 @@ import { shipVsAsteroids, shotsVsAsteroids } from "./collisions";
 
 /** GAME ELEMENTS */
 import Ship from "./elements/ship";
-import Score from "./elements/score";
+import Scoreboard from "./elements/scoreboard";
 import Asteroids from "./elements/asteroids";
-import Life from "./elements/life";
 
 const ASTEROID_HITS = {
   X: { points: 20, sound: "asteroidBreakL" },
@@ -17,38 +16,23 @@ const ASTEROID_HITS = {
 };
 
 export default class Game {
-  constructor(p5, soundManager, input, started, level) {
+  constructor(p5, soundManager, input, run, current, images) {
     this.p5 = p5;
     this.soundManager = soundManager;
     this.input = input;
+    this.run = run;
 
-    this.state = new GameState({ started });
-    this.level = level;
-    this.score;
+    this.state = new GameState({ current });
 
-    // VIEWS
-    this.gameOverScreen;
-    this.startMenuScreen;
-    this.levelUpScreen;
+    /** VIEWS */
+    this.gameOverScreen = new GameOverScreen(p5, this);
+    this.startMenuScreen = new StartMenuScreen(p5, this);
+    this.levelUpScreen = new LevelUpScreen(p5, this);
+    this.scoreboard = new Scoreboard(p5, images.heart);
 
-    /* GAME ELEMENTS */
-    this.lifes;
-    this.ship;
-    this.asteroids = [];
-  }
-
-  setup(shipImage, heartImage, score, lifes) {
-    /** INITIALIZING STATE COMPONENTS */
-    this.gameOverScreen = new GameOverScreen(this.p5, this);
-    this.startMenuScreen = new StartMenuScreen(this.p5, this);
-    this.levelUpScreen = new LevelUpScreen(this.p5, this);
-    this.score = score || new Score(this.p5);
-
-    /* INITIALIZING GAME ELEMENTS */
-    this.ship = new Ship(this.p5, this, shipImage);
-    this.lifes =
-      lifes || new Array(3).fill().map(() => new Life(this.p5, heartImage));
-    this.asteroids = new Asteroids(this.p5, this.level);
+    /** GAME ELEMENTS */
+    this.ship = new Ship(p5, this, images.ship);
+    this.asteroids = new Asteroids(p5, run.level);
   }
 
   checkForHits() {
@@ -61,7 +45,7 @@ export default class Game {
       const rule = ASTEROID_HITS[asteroid.size];
       if (rule) {
         this.soundManager.play(rule.sound);
-        this.score.value += rule.points;
+        this.run.addPoints(rule.points);
       }
     }
   }
@@ -78,7 +62,7 @@ export default class Game {
     if (!this.state.isPlaying()) return;
     if (this.asteroids.array.length === 0) {
       this.state.levelCleared();
-      this.level++;
+      this.run.nextLevel();
 
       if (this.soundManager) {
         this.soundManager.play("levelUp");
@@ -98,15 +82,8 @@ export default class Game {
       this.soundManager.play("shipExplosion");
     }
 
-    const wasFinalDeath = this.lifes.length === 0;
-    if (!wasFinalDeath) this.lifes.pop();
-
-    this.state.shipDied({
-      wasFinalDeath,
-      level: this.level,
-      score: this.score,
-      lifes: this.lifes,
-    });
+    const wasFinalDeath = this.run.loseLife();
+    this.state.shipDied({ wasFinalDeath });
 
     if (wasFinalDeath && this.soundManager) {
       this.soundManager.play("gameOver");
@@ -125,8 +102,7 @@ export default class Game {
     // RENDER ELEMENTS
     this.asteroids.draw();
     this.ship.draw();
-    this.lifes.forEach((life, i) => life.draw(i + 1));
-    this.score.draw();
+    this.scoreboard.draw(this.run);
   }
 
   draw() {

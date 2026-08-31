@@ -1,8 +1,10 @@
 export default class GameState {
-  constructor({ started = false, respawnDelayMs = 3000 } = {}) {
-    this.current = started ? "playing" : "menu";
-    this.wantsRebuild = false;
-    this.rebuildArgs = null;
+  constructor({ current = "menu", respawnDelayMs = 3000 } = {}) {
+    this.current = current;
+    // The state a fresh Game should start in, or null while no rebuild is due. index.js polls
+    // this after every frame. Score, lives and level are not carried here: Run owns them and
+    // outlives the rebuild.
+    this.nextState = null;
     this.respawnDelayMs = respawnDelayMs;
     this._timer = null;
   }
@@ -11,33 +13,32 @@ export default class GameState {
     if (this.current === "menu") this.current = "playing";
   }
 
-  shipDied({ wasFinalDeath, level, score, lifes }) {
+  shipDied({ wasFinalDeath }) {
     if (this.current !== "playing") return;
+
     if (wasFinalDeath) {
       this.current = "gameOver";
-    } else {
-      this.current = "dying";
-      this._timer = setTimeout(() => {
-        this.rebuildArgs = [true, level, score, lifes];
-        this.wantsRebuild = true;
-      }, this.respawnDelayMs);
+      return;
     }
+
+    this.current = "dying";
+    this._timer = setTimeout(() => {
+      this.nextState = "playing";
+    }, this.respawnDelayMs);
   }
 
   levelCleared() {
     if (this.current === "playing") this.current = "levelComplete";
   }
 
-  acknowledgeLevelUp({ level, score, lifes }) {
+  acknowledgeLevelUp() {
     if (this.current !== "levelComplete") return;
-    this.rebuildArgs = [true, level, score, lifes];
-    this.wantsRebuild = true;
+    this.nextState = "playing";
   }
 
   acknowledgeGameOver() {
     if (this.current !== "gameOver") return;
-    this.rebuildArgs = [false, 1, null, null];
-    this.wantsRebuild = true;
+    this.nextState = "menu";
   }
 
   isPlaying() {

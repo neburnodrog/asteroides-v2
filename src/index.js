@@ -13,6 +13,7 @@ import "./images/favicon.ico";
 // GAME COMPONENTS
 import Background from "./game/elements/background.js";
 import Game from "./game/game";
+import Run from "./game/run.js";
 import { findOutHeight, findOutWidth } from "./game/helpers";
 
 import SoundManager from "./game/soundManager.js";
@@ -23,17 +24,16 @@ let background;
 let game;
 let ship;
 let heart;
-let score;
 let spaceQuest;
 
 // p5 SKETCH
 export const Canvas = new p5((p5) => {
   let soundManager = new SoundManager(p5);
   let input = new Input(p5);
+  let run = new Run();
 
-  const resetSketch = (started, level, oldScore, oldLifes) => {
-    game = new Game(p5, soundManager, input, started, level);
-    game.setup(ship, heart, oldScore, oldLifes);
+  const resetSketch = (current) => {
+    game = new Game(p5, soundManager, input, run, current, { ship, heart });
   };
 
   p5.preload = () => {
@@ -48,7 +48,7 @@ export const Canvas = new p5((p5) => {
     p5.createCanvas(findOutWidth(), findOutHeight());
     p5.imageMode(p5.CENTER);
     background = new Background(p5);
-    resetSketch(false, 1);
+    resetSketch("menu");
     p5.textFont(spaceQuest);
   };
 
@@ -56,8 +56,11 @@ export const Canvas = new p5((p5) => {
     background.draw();
     game.draw();
 
-    if (game.state.wantsRebuild) {
-      resetSketch(...game.state.rebuildArgs);
+    const { nextState } = game.state;
+    if (nextState) {
+      // Rebuilding into the menu means the run ended. Everything else continues it.
+      if (nextState === "menu") run.reset();
+      resetSketch(nextState);
     }
 
     let fps = p5.frameRate();
