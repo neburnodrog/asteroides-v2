@@ -5,11 +5,19 @@
 // "put two asteroids on the ship", not "reach into asteroids.array and assign position", so
 // moving a field inside Game does not rewrite the suite.
 //
-// Two clocks matter here. Frames advance only through step(), and wall time only through the
-// respawn timer, which setRespawnDelay shortens. Nothing in a spec should wait and hope.
+// There is one clock. Frames advance only through step(), and nothing in the engine reads wall
+// time. Nothing in a spec should wait and hope.
 
 export function attachHarness({ p5, run, getGame }) {
   const game = () => getGame();
+
+  // Reported as a boolean rather than two floats, so a spec asserts the ship came back where
+  // the outline promised without naming a coordinate.
+  const atSpawnPoint = (g) => {
+    const point = g.state.spawnPoint;
+    if (!point) return false;
+    return g.ship.position.x === point.x && g.ship.position.y === point.y;
+  };
 
   const harness = {
     /** TIME */
@@ -25,10 +33,11 @@ export function attachHarness({ p5, run, getGame }) {
       for (let i = 0; i < frames; i++) p5.redraw();
     },
 
-    // The respawn timer is real wall time. Shortening it keeps the timer path under test
-    // instead of bypassing it. A rebuild makes a new GameState, so call this again after one.
-    setRespawnDelay(ms) {
-      game().state.respawnDelayMs = ms;
+    // A death lasts this many frames at minimum, then as long as it takes for a clearing to
+    // exist. Shortening it keeps the real code path under test instead of bypassing it. A
+    // rebuild after a cleared level makes a new GameState, so call this again after one.
+    setMinimumDeathFrames(frames) {
+      game().state.minimumDeathFrames = frames;
     },
 
     /** READING */
@@ -37,6 +46,10 @@ export function attachHarness({ p5, run, getGame }) {
       return {
         state: g.state.current,
         nextState: g.state.nextState,
+        deathFrames: g.state.deathFrames,
+        spawnPoint: g.state.spawnPoint,
+        shipAtSpawnPoint: atSpawnPoint(g),
+        canvas: { width: p5.width, height: p5.height },
         score: run.score,
         lives: run.lives,
         level: run.level,
@@ -45,6 +58,7 @@ export function attachHarness({ p5, run, getGame }) {
         debris: g.asteroids.asteroidDebris.length,
         shots: g.ship.shots.length,
         shipExploded: g.ship.exploded,
+        shipDebris: g.ship.shipDebris.length,
         shipMoving: g.ship.velocity.x !== 0 || g.ship.velocity.y !== 0,
       };
     },
@@ -65,8 +79,8 @@ export function attachHarness({ p5, run, getGame }) {
       game().state.nextState = state;
     },
 
-    /** ARRANGING THE WAVE */
-    clearWave() {
+    /** ARRANGING THE FIELD */
+    clearField() {
       game().asteroids.array = [];
     },
 
@@ -112,13 +126,30 @@ export function attachHarness({ p5, run, getGame }) {
       return { size: target.size, radius: target.radius };
     },
 
-    // Places one asteroid at an exact point. Used for the corner case where a dead ship
-    // still has a hitbox.
+    // Places one asteroid at an exact point. The radius comes back because it is random, and a
+    // spec that aims this asteroid at a clearing needs it to work out which frame the disc
+    // crosses the edge of the circle.
     putAsteroidAt({ x, y, index = 0 }) {
       const asteroid = game().asteroids.array[index];
       asteroid.velocity = { x: 0, y: 0 };
       asteroid.position = { x, y };
-      return { x, y };
+      return { x, y, radius: asteroid.radius };
+    },
+
+    // Sets one asteroid's velocity so it arrives at the point in that many frames. Aiming past
+    // an edge is how a spec arranges a path that only reaches the point after wrapping.
+    aimAsteroidAt({ index = 0, x, y, arrivalFrames }) {
+      const asteroid = game().asteroids.array[index];
+      asteroid.velocity = {
+        x: (x - asteroid.position.x) / arrivalFrames,
+        y: (y - asteroid.position.y) / arrivalFrames,
+      };
+      return { ...asteroid.velocity };
+    },
+
+    // Runs the clearing search over the field as it stands, with no death and no rebuild.
+    findClearing() {
+      return game().findClearing();
     },
 
     explodeAllAsteroids() {

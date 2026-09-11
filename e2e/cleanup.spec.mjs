@@ -36,12 +36,16 @@ test.describe("cleanup", () => {
 
   test("ship debris fades out after a death", async ({ asteroides: a }) => {
     await a.startRun();
+    // Longer than the 200 frames below, so the debris is measured on a ship that is still dead
+    // rather than on one the rebuild has already cleaned up after.
+    await a.setMinimumDeathFrames(400);
     await a.putAsteroidsOnShip(1);
     await a.step();
-    expect((await a.snapshot()).shipExploded).toBe(true);
+    expect(await a.snapshot()).toMatchObject({ shipExploded: true });
+    expect((await a.snapshot()).shipDebris).toBeGreaterThan(0);
 
     await a.step(200);
 
-    expect((await a.snapshot()).state).toBe("dying");
+    expect(await a.snapshot()).toMatchObject({ state: "dying", shipDebris: 0 });
   });
 });

@@ -21,7 +21,7 @@ test.describe("run state across rebuilds", () => {
   }) => {
     await a.startRun();
     await a.setRun({ score: 120 });
-    await a.clearWave();
+    await a.clearField();
     await a.step();
 
     // The level number advances at clear time, so the screen already names the wave that
@@ -45,7 +45,7 @@ test.describe("run state across rebuilds", () => {
   test("score and level survive a death", async ({ asteroides: a }) => {
     await a.startRun();
     await a.setRun({ score: 250, level: 3 });
-    await a.killShipAndRespawn();
+    await a.killShipAndRebuild();
 
     expect(await a.snapshot()).toMatchObject({
       state: "playing",

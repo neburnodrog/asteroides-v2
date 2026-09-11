@@ -6,12 +6,14 @@ const VERBS = [
   "freeze",
   "resume",
   "step",
-  "setRespawnDelay",
+  "setMinimumDeathFrames",
   "snapshot",
   "startRun",
   "setRun",
   "requestRebuild",
-  "clearWave",
+  "clearField",
+  "aimAsteroidAt",
+  "findClearing",
   "parkAsteroids",
   "putAsteroidsOnShip",
   "putAsteroidInFrontOfShip",
@@ -55,16 +57,14 @@ export const test = base.extend({
       await page.keyboard.up(key);
     };
 
-    // Kills the ship and waits out the respawn timer, shortened so the suite does not spend
-    // three real seconds per death. The timer itself still runs.
-    api.killShipAndRespawn = async () => {
-      await api.setRespawnDelay(50);
+    // Kills the ship and steps out the death, shortened so the suite does not spend three
+    // seconds of frames per death. The real code path still runs: the search still has to find
+    // a clearing, and putAsteroidsOnShip parks the rest of the field out of the way so it does.
+    // The death ends on the frame the counter reaches its minimum, the death frame included.
+    api.killShipAndRebuild = async (minimumDeathFrames = 40) => {
+      await api.setMinimumDeathFrames(minimumDeathFrames);
       await api.putAsteroidsOnShip(1);
-      await api.step();
-      await page.waitForFunction(
-        () => window.__asteroides.snapshot().nextState === "playing"
-      );
-      await api.step();
+      await api.step(minimumDeathFrames);
     };
 
     await api.freeze();

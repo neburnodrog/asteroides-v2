@@ -4,6 +4,8 @@ import ShipTrace from "./shipTrace";
 import { randomInteger, calcVectorValue } from "../helpers";
 
 const PI = Math.PI;
+// The outline alternates every BLINK_PERIOD frames while the spawn point is locked.
+const BLINK_PERIOD = 5;
 
 export default class Ship {
   constructor(p5, game, image) {
@@ -122,6 +124,18 @@ export default class Ship {
       .map(() => new ShipDebris(this.p5, origin));
   }
 
+  // A death rebuilds the ship, not the Game, so this is the whole of the clean slate: back at
+  // the spawn point, stationary, pointing the way it started, with the wreck cleared away.
+  rebuildAt({ x, y }) {
+    this.position = { x, y };
+    this.velocity = { x: 0, y: 0 };
+    this.acceleration = 0;
+    this.angleOfShip = 0;
+    this.exploded = false;
+    this.shipDebris = [];
+    this.traces = [];
+  }
+
   createTraces() {
     this.traces.push(new ShipTrace(this.p5, this));
   }
@@ -147,6 +161,24 @@ export default class Ship {
     this.shipDebris = this.shipDebris.filter(
       (debris) => debris.faded === false
     );
+  }
+
+  drawRebuildOutline() {
+    const { spawnPoint, deathFrames } = this.game.state;
+    if (!this.game.state.isDying() || !spawnPoint) return;
+    if (Math.floor(deathFrames / BLINK_PERIOD) % 2 === 1) return;
+
+    const { p5 } = this;
+    const nose = this.shipLength / 2;
+    const tail = this.shipWidth / 2;
+
+    p5.push();
+    p5.translate(spawnPoint.x, spawnPoint.y);
+    p5.noFill();
+    p5.stroke(255);
+    p5.strokeWeight(2);
+    p5.triangle(nose, 0, -nose, -tail, -nose, tail);
+    p5.pop();
   }
 
   /** LOOP */
@@ -178,6 +210,7 @@ export default class Ship {
 
     if (this.exploded) {
       this.shipDebris.forEach((debris) => debris.draw());
+      this.drawRebuildOutline();
     } else {
       // RENDERS THE SHIP ITSELF
       p5.push();

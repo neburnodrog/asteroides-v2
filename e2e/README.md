@@ -30,9 +30,10 @@ expect(await a.snapshot()).toMatchObject({ state: "dying", lives: 2 });
 
 Three rules, each learned the hard way while verifying the `Run` extraction by hand.
 
-Own the clock. The fixture freezes the sketch with `p5.noLoop()` and every frame comes from an
-explicit `step()`. Anything that waits and then checks is racing the game: asteroids drift, the
-ship dies, and shots cross the whole canvas in under a second.
+Own the clock. There is one. The fixture freezes the sketch with `p5.noLoop()` and every frame
+comes from an explicit `step()`, and nothing in the engine reads wall time: a death is a frame
+count that `setMinimumDeathFrames` shortens. Anything that waits and then checks is racing the
+game: asteroids drift, the ship dies, and shots cross the whole canvas in under a second.
 
 Arrange everything the test depends on. `parkAsteroids` stops the drift before a test places
 what it cares about. The RNG is never seeded, because a test that sets the positions it needs
@@ -51,4 +52,6 @@ Sound. It needs a user gesture the headless browser will not give, and `SoundMan
 on a missing key by design.
 
 Exact positions and velocities. `snapshot()` reports counts, states and a `shipMoving` boolean
-rather than floats, so a physics tweak does not fail an unrelated test.
+rather than floats, so a physics tweak does not fail an unrelated test. `spawnPoint` is the one
+exception, and a spec asserts a relationship about it, that it is far from a corner or is where
+the ship ended up, never a coordinate.

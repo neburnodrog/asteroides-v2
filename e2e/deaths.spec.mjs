@@ -36,10 +36,10 @@ test.describe("deaths", () => {
   }) => {
     await a.startRun();
 
-    await a.killShipAndRespawn();
+    await a.killShipAndRebuild();
     expect((await a.snapshot()).lives).toBe(2);
 
-    await a.killShipAndRespawn();
+    await a.killShipAndRebuild();
     expect((await a.snapshot()).lives).toBe(1);
 
     await a.putAsteroidsOnShip(1);

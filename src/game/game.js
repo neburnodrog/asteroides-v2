@@ -3,11 +3,18 @@ import GameOverScreen from "./state/gameOverScreen";
 import { StartMenuScreen, LevelUpScreen } from "./state/startMenuScreen";
 import GameState from "./gameState";
 import { shipVsAsteroids, shotsVsAsteroids } from "./collisions";
+import { findClearing } from "./clearing";
 
 /** GAME ELEMENTS */
 import Ship from "./elements/ship";
 import Scoreboard from "./elements/scoreboard";
 import Asteroids from "./elements/asteroids";
+
+// The clearing the ship comes back into: nothing inside this radius, and nothing due to enter
+// it within this many frames. The look ahead covers the 30 blinking frames plus one second of
+// play, which is player reaction time rather than ship acceleration.
+const CLEARING_RADIUS = 300;
+const CLEARING_LOOK_AHEAD = 90;
 
 const ASTEROID_HITS = {
   X: { points: 20, sound: "asteroidBreakL" },
@@ -70,6 +77,24 @@ export default class Game {
     }
   }
 
+  findClearing() {
+    return findClearing({
+      asteroids: this.asteroids.array,
+      width: this.p5.width,
+      height: this.p5.height,
+      radius: CLEARING_RADIUS,
+      lookAhead: CLEARING_LOOK_AHEAD,
+    });
+  }
+
+  // A death keeps the field, so it rebuilds the ship in place rather than the Game. The search
+  // runs once per frame from the moment the state asks for it until it returns a point.
+  advanceDeath() {
+    if (this.state.advanceDeath(() => this.findClearing())) {
+      this.ship.rebuildAt(this.state.spawnPoint);
+    }
+  }
+
   checkIfCollisions() {
     if (!this.state.isPlaying()) return;
 
@@ -97,6 +122,7 @@ export default class Game {
     this.checkIfCollisions();
     this.checkForHits();
     this.checkIfExplodedAsteroids();
+    this.advanceDeath();
     this.checkIfLevelCompleted();
 
     // RENDER ELEMENTS
