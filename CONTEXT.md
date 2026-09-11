@@ -13,8 +13,9 @@ the lives and the level across every death and every new wave.
 _Avoid_: session, game, playthrough
 
 **Level**
-One wave of asteroids. A level is cleared when no asteroids remain, and the level number is the
-only difficulty dial in the game.
+One wave of asteroids. A level starts with two `X` asteroids per level number and is cleared when
+no asteroids remain. The level number sets how many asteroids there are; asteroid size sets how
+fast they move.
 _Avoid_: wave, stage, round
 
 **Life**
@@ -22,10 +23,39 @@ One ship the player still has. The count includes the ship in play, so the run e
 that takes it to zero.
 _Avoid_: spare, chance, heart. A heart is the picture of a life, not the life itself.
 
+**Death**
+The time from the ship exploding to the rebuild: at least three seconds, then until a clearing
+exists. The field keeps drifting, the ship cannot act, and no press is read. The last half
+second shows where the ship will come back.
+_Avoid_: dying, respawn delay, death timer
+
 **Rebuild**
 The point where play restarts inside a run, after a death or after a cleared level. The score,
-the lives and the level survive a rebuild. Everything on screen does not.
+the lives and the level survive a rebuild. After a death the surviving asteroids survive too,
+and the ship comes back inside a clearing. After a cleared level the next level starts fresh.
 _Avoid_: reset, restart, respawn. A reset ends the run and starts a new one.
+
+### Flying
+
+**Thrust**
+Acceleration along the ship's heading. Thrust is the only thing that leaves a trace.
+_Avoid_: boost, accelerate, forward
+
+**Brake**
+Thrust against the ship's heading. It slows the ship and, held long enough, sends it backwards.
+_Avoid_: reverse, stop, decelerate
+
+**Wrap**
+The ship or an asteroid leaving one edge of the canvas re-enters from the opposite edge. Shots
+do not wrap: a shot that leaves the canvas is gone.
+_Avoid_: overflow, toroidal, teleport
+
+**Clearing**
+A 300 pixel circle the ship comes back into, with no asteroid inside it and none due to enter
+it within the next second and a half. A new level clears the canvas centre; a rebuild after a
+death picks the point on the canvas with the longest time to the first threat. The clearing is
+the only protection the ship gets; there is no invulnerability.
+_Avoid_: safe zone, spawn exclusion, buffer
 
 ### On screen
 
@@ -53,6 +83,8 @@ _Avoid_: exhaust, trail, smoke
 **Asteroid size**
 One of three: `X`, `M`, `S`. Size decides the radius, the speed, the points awarded and what an
 asteroid breaks into. `X` breaks into two `M`, `M` breaks into two `S`, `S` breaks into nothing.
+Smaller is faster and worth more: top speeds of about 3, 5 and 7 pixels per frame, and
+points 20, 50, 75.
 _Avoid_: large, medium, small as identifiers. The letters are the names.
 
 **Hit pair**
