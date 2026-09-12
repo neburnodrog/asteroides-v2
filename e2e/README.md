@@ -48,6 +48,17 @@ One page per test. Playwright gives each test a fresh page, so no test can inher
 another test arranged. A stale pair of stacked asteroids is what made a hand run report 40
 points where 20 was expected.
 
+## The two exceptions to "never wait"
+
+`reload()` is the one verb that leaves the frozen world behind. It loads the page again and waits
+for the harness, then freezes what comes back, because asserting that the high score table
+survives is only worth anything across a real page load.
+
+Storage is arranged through verbs too. `setHighScores` fills the table through the same `record`
+call a finished run uses, `breakStorage` makes every write throw for the rest of the page the way
+a private window does, and `corruptStorage` writes a value the module cannot parse. A spec never
+names the storage key and never calls `localStorage` itself.
+
 ## What is deliberately not tested
 
 Rendering. Comparing screenshots of a starfield built from 500 randomly placed stars is a flake

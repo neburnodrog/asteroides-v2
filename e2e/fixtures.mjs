@@ -12,6 +12,11 @@ const VERBS = [
   "setRun",
   "killShip",
   "requestRebuild",
+  "readHighScores",
+  "setHighScores",
+  "clearHighScores",
+  "breakStorage",
+  "corruptStorage",
   "clearField",
   "keepAsteroids",
   "parkAsteroids",
@@ -46,6 +51,14 @@ export const test = base.extend({
           [verb, args]
         );
     }
+
+    // A real page load, because a persistence assertion is only worth anything across one. The
+    // game comes back frozen at the menu, the way the fixture handed it over.
+    api.reload = async () => {
+      await page.goto("/?e2e=1");
+      await page.waitForFunction(() => Boolean(window.__asteroides));
+      await api.freeze();
+    };
 
     // A real key event, then exactly one frame for the game to read it. p5 reads the keyboard
     // during draw, so a press with no frame after it is a press nothing ever sees.

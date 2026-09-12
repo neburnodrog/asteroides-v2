@@ -21,6 +21,14 @@ export default class GameOverScreen {
 
         p5.text('GAME OVER', 0, 0)
         p5.text(`SCORE: ${this.game.run.score}`, 0, 100);
+
+        // Nothing extra when the run missed the table, so a bad run is not decorated.
+        if (this.game.rank) {
+            p5.textSize(22);
+            p5.text(`NEW HIGH SCORE #${this.game.rank}`, 0, 147);
+            p5.textSize(this.textSize);
+        }
+
         p5.text('PRESS SPACE TO PLAY AGAIN', 0, 200)
 
         p5.pop();

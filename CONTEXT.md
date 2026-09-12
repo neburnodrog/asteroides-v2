@@ -55,6 +55,29 @@ and the ship comes back at its return point as a ghost. After a cleared level th
 starts fresh.
 _Avoid_: reset, restart, respawn. A reset ends the run and starts a new one.
 
+### The record
+
+**High score table**
+The ten best runs on this browser, best first. It outlives every run and survives closing the
+tab. The start menu shows the best five.
+_Avoid_: leaderboard, scoreboard, high scores. A scoreboard is the strip on the top of the
+canvas during play.
+
+**Entry**
+One finished run in the table: the score it reached and the level it reached.
+_Avoid_: record, row, result
+
+**Qualifying score**
+A score that earns a place. Any score above zero qualifies while the table holds fewer than ten
+entries; after that it has to beat the tenth outright. A score equal to an entry does not
+displace it.
+_Avoid_: high enough, good enough
+
+**Rank**
+The place a finished run took in the table, counted from 1. A run that did not qualify has no
+rank. The game over screen names it when there is one.
+_Avoid_: position, place, index
+
 ### Flying
 
 **Thrust**

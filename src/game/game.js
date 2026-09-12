@@ -16,13 +16,17 @@ const ASTEROID_HITS = {
 };
 
 export default class Game {
-  constructor(p5, soundManager, input, run, current, images) {
+  constructor(p5, soundManager, input, run, highScores, current, images) {
     this.p5 = p5;
     this.soundManager = soundManager;
     this.input = input;
     this.run = run;
+    this.highScores = highScores;
 
     this.state = new GameState({ current });
+    // Where the run that ended on this Game landed in the high score table, or null. A death is
+    // not a rebuild, so this survives until the player confirms the game over screen.
+    this.rank = null;
 
     /** VIEWS */
     this.gameOverScreen = new GameOverScreen(p5, this);
@@ -92,6 +96,13 @@ export default class Game {
     }
 
     const wasFinalDeath = this.run.loseLife();
+
+    // The only point that knows a run ended while its score and level are still set. The rank is
+    // therefore measured against the table as it stood before the run, and written once per run.
+    if (wasFinalDeath) {
+      this.rank = this.highScores.record(this.run.score, this.run.level);
+    }
+
     this.state.shipDied({ wasFinalDeath, returnPoint });
 
     if (wasFinalDeath && this.soundManager) {
