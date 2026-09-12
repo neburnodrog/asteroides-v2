@@ -24,15 +24,35 @@ that takes it to zero.
 _Avoid_: spare, chance, heart. A heart is the picture of a life, not the life itself.
 
 **Death**
-The time from the ship exploding to the rebuild: at least three seconds, then until a clearing
-exists. The field keeps drifting, the ship cannot act, and no press is read. The last half
-second shows where the ship will come back.
+The sequence from the ship exploding to the ship becoming killable again: an absence, then a
+ghost. It costs one life.
 _Avoid_: dying, respawn delay, death timer
+
+**Absence**
+The 120 frames after the ship explodes, with no ship on the canvas. The field keeps drifting and
+no press is read.
+_Avoid_: death timer, wait, pause
+
+**Ghost**
+The 120 frames after an absence. The ship is back at its return point and can be flown, but it
+cannot be hit and it cannot shoot. It blinks faster and fades in as the time runs out.
+_Avoid_: invulnerability, spawn protection, immunity
+
+**Grace**
+A fixed 60 frame extension of a ghost, triggered when an asteroid overlaps the ship at the moment
+the ghost would end. It runs its full length whatever happens next. An overlap still present at
+the end of a grace kills.
+_Avoid_: grace period, extension, mercy
+
+**Return point**
+The place a ghost appears, which is the place the ship died.
+_Avoid_: spawn, spawn point, respawn point
 
 **Rebuild**
 The point where play restarts inside a run, after a death or after a cleared level. The score,
 the lives and the level survive a rebuild. After a death the surviving asteroids survive too,
-and the ship comes back inside a clearing. After a cleared level the next level starts fresh.
+and the ship comes back at its return point as a ghost. After a cleared level the next level
+starts fresh.
 _Avoid_: reset, restart, respawn. A reset ends the run and starts a new one.
 
 ### Flying
@@ -51,10 +71,8 @@ do not wrap: a shot that leaves the canvas is gone.
 _Avoid_: overflow, toroidal, teleport
 
 **Clearing**
-A 300 pixel circle the ship comes back into, with no asteroid inside it and none due to enter
-it within the next second and a half. A new level clears the canvas centre; a rebuild after a
-death picks the point on the canvas with the longest time to the first threat. The clearing is
-the only protection the ship gets; there is no invulnerability.
+The empty circle at the canvas centre that a new level starts with. It applies to a new level
+only. A death protects the ship with a ghost instead.
 _Avoid_: safe zone, spawn exclusion, buffer
 
 ### On screen

@@ -1,5 +1,7 @@
 # Rebuild after a death keeps the surviving asteroids
 
+Status: superseded by ADR-0002. The field still persists; the clearing does not.
+
 A rebuild after a death used to start the level over with a fresh set of asteroids, which
 punished the player twice. We decided the field persists and the ship comes back into a
 clearing: a 300 pixel circle with no asteroid inside and none due to enter within a second and
