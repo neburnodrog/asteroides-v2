@@ -29,6 +29,7 @@ export default class Ship {
 
     // STATE
     this.exploded = false;
+    this.thrustSoundPlaying = false;
   }
 
   /** USER ACTION METHODS */
@@ -54,8 +55,17 @@ export default class Ship {
       }
     } else {
       this.acceleration = 0;
-      this.thrustSoundPlaying = false;
+      this.stopThrust();
     }
+  }
+
+  // Every path that ends thrust comes through here: the key going up, the ship dying, and the
+  // Game being torn down around a SoundManager that outlives it. The loop plays until something
+  // stops it, so a path that only cleared the flag would leave it running forever.
+  stopThrust() {
+    if (!this.thrustSoundPlaying) return;
+    this.game?.soundManager?.stop("shipThrust");
+    this.thrustSoundPlaying = false;
   }
 
   brakes() {
@@ -116,6 +126,7 @@ export default class Ship {
 
   /** EVENTS => triggered in game.js */
   handleExplosion() {
+    this.stopThrust();
     const origin = { ...this.position };
     this.exploded = true;
     this.position = { x: null, y: null };

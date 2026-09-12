@@ -53,8 +53,11 @@ points where 20 was expected.
 Rendering. Comparing screenshots of a starfield built from 500 randomly placed stars is a flake
 generator.
 
-Sound. It needs a user gesture the headless browser will not give, and `SoundManager.play` no-ops
-on a missing key by design.
+Audibility. A headless browser keeps the audio context suspended, so no spec can hear anything.
+What `sound.spec.mjs` does assert is the part the game controls: that every key the game plays is
+one `SoundManager` holds, and that the thrust loop is started and stopped on the paths that start
+and end thrust. The key-set assertion is the regression guard for #3, where three cues were played
+and never loaded and `SoundManager.play` no-opped in silence.
 
 Exact positions and velocities. `snapshot()` reports counts, states and a `shipMoving` boolean
 rather than floats, so a physics tweak does not fail an unrelated test. `returnPoint` and

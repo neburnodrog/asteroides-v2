@@ -161,6 +161,25 @@ export function attachHarness({ p5, run, getGame }) {
       return { x, y, radius: asteroid.radius };
     },
 
+    /** SOUND */
+    // The cue keys SoundManager holds. A cue the game plays but never loads is the defect this
+    // reports on: play() no-ops on a missing key, so nothing throws and nothing sounds.
+    soundCueKeys() {
+      return Object.keys(game().soundManager.sounds);
+    },
+
+    // Which cues report themselves as sounding. A headless browser keeps the audio context
+    // suspended, so this is the cue's own account of whether it was started and not yet
+    // stopped, which is the part the game controls.
+    playingCues() {
+      const { sounds } = game().soundManager;
+      return Object.keys(sounds).filter((key) => sounds[key].isPlaying?.());
+    },
+
+    playCue(key) {
+      game().soundManager.play(key);
+    },
+
     explodeAllAsteroids() {
       const g = game();
       g.asteroids.array.forEach((asteroid) => {

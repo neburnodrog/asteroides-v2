@@ -19,6 +19,9 @@ const VERBS = [
   "putAsteroidInFrontOfShip",
   "putAsteroidAt",
   "explodeAllAsteroids",
+  "soundCueKeys",
+  "playingCues",
+  "playCue",
 ];
 
 export const test = base.extend({

@@ -33,6 +33,7 @@ const sketch = (p5) => {
   let run = new Run();
 
   const resetSketch = (current) => {
+    game?.teardown();
     game = new Game(p5, soundManager, input, run, current, { ship, heart });
   };
 

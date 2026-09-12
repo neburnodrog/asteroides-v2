@@ -35,6 +35,12 @@ export default class Game {
     this.asteroids = new Asteroids(p5, run.level);
   }
 
+  // The SoundManager outlives every Game built around it, so anything still sounding when one
+  // is discarded would carry into the next.
+  teardown() {
+    this.ship.stopThrust();
+  }
+
   checkForHits() {
     const hits = shotsVsAsteroids(this.ship.shots, this.asteroids.array);
 
@@ -140,6 +146,10 @@ export default class Game {
         this.playGame();
         break;
       case "levelComplete":
+        // The screen takes the draw away from playGame, so the ship is no longer stepped and
+        // the key release that would end thrust is never read. Without this the loop sounds
+        // under the level-up screen until the player confirms it and the Game is rebuilt.
+        this.ship.stopThrust();
         this.levelUpScreen.draw();
         break;
       case "gameOver":

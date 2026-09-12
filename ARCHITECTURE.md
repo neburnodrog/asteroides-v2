@@ -13,7 +13,7 @@ Domain vocabulary lives in `CONTEXT.md`. There are no external services and no p
 | Module | Path | Purpose | Key Files |
 |---|---|---|---|
 | Bootstrap | `src/index.js` | p5 instance creation, asset preload, top-level state reset wiring | `index.js` |
-| Game Controller | `src/game/` | Per-level Game instance, state-machine dispatch, collision response, and the run scoped score, lives and level | `game.js`, `gameState.js`, `run.js`, `input.js`, `collisions.js`, `soundManager.js`, `helpers.js` |
+| Game Controller | `src/game/` | Per-level Game instance, state-machine dispatch, collision response, and the run scoped score, lives and level | `game.js`, `gameState.js`, `run.js`, `input.js`, `collisions.js`, `soundManager.js`, `cues.js`, `helpers.js` |
 | Entities | `src/game/elements/` | Ship, Asteroids, Shot, Debris, Scoreboard, Background, Stars. All class-based, all own their own `draw()` | `ship.js`, `asteroids.js`, `shot.js`, `debris.js`, `asteroidDebris.js`, `shipDebris.js`, `shipTrace.js`, `background.js`, `stars.js`, `scoreboard.js` |
 | Test seam | `src/game/harness.js`, `e2e/` | Arrangement verbs exposed to Playwright, plus the spec suite | `harness.js`, `e2e/fixtures.mjs`, `e2e/*.spec.mjs`, `playwright.config.mjs` |
 | Screens | `src/game/state/` | Non-playing game states rendered as full-canvas overlays | `startMenuScreen.js` (exports `StartMenuScreen` and `LevelUpScreen`), `gameOverScreen.js` |
@@ -33,7 +33,7 @@ Domain vocabulary lives in `CONTEXT.md`. There are no external services and no p
 - **Collision detection**: `src/game/collisions.js` — two pure functions, `shipVsAsteroids(ship, asteroids)` and `shotsVsAsteroids(shots, asteroids)`. Imports nothing, holds no state, never touches p5. `Game` calls them and owns every consequence.
 - **Player entity**: `src/game/elements/ship.js` — physics integration, shot/trace/debris spawning, screen-wrap. Reads input via `this.game.input.isHeld(...)` / `wasPressed(...)`.
 - **Asteroid system**: `src/game/elements/asteroids.js` — spawns initial wave per `level`, handles splitting (`X` → `M` → `S`) on hit, owns the asteroid array.
-- **Sound dispatch**: `src/game/soundManager.js` — wraps `p5.SoundFile`, applies a shared reverb to explosion/break sounds.
+- **Sound dispatch**: `src/game/soundManager.js` — keys every cue by name, applies a shared reverb to explosion/break sounds. Five cues are `p5.SoundFile`s loaded from `src/sounds/`. The three with no file in the repository (`levelUp`, `gameOver`, `shipThrust`) are synthesized in `src/game/cues.js` and answer the same `play`/`stop` pair, so neither `SoundManager` method knows which kind it holds.
 
 ## Invariants
 
@@ -69,7 +69,7 @@ Domain vocabulary lives in `CONTEXT.md`. There are no external services and no p
 | Concern | Implementation | Location |
 |---|---|---|
 | Rendering | p5.js Canvas 2D, instance mode, 60fps `draw()` | `index.js` (instance creation), every entity's `draw()` |
-| Audio | `p5.sound`-wrapped soundfiles with a shared reverb on explosions | `src/game/soundManager.js` |
+| Audio | `p5.sound` soundfiles plus oscillator/noise cues synthesized at runtime, with a shared reverb on explosions, breaks and both one-shot cues | `src/game/soundManager.js`, `src/game/cues.js` |
 | Input | All keyboard input flows through `src/game/input.js`. Ship and screens query via `input.isHeld(action)` for held inputs and `input.wasPressed(action)` (consume-on-read) for one-shots. `p5.keyPressed` is assigned exactly once, in the `Input` constructor. | `src/game/input.js`, callers in `ship.js`, `state/startMenuScreen.js`, `state/gameOverScreen.js` |
 | Run state | Score, lives and level as plain numbers on one `Run` instance that outlives every `Game`. Only `Game` writes to it, through four methods. | `src/game/run.js`, callers in `game.js`, `index.js`, both screen classes |
 | Geometry/viewport | Vector helpers and responsive canvas sizing | `src/game/helpers.js` (`findOutWidth`, `findOutHeight`, `calcVectorValue`, `randomInteger`, `drawPolygon`) |
