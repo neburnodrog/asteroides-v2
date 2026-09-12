@@ -189,5 +189,20 @@ wreck no longer overlaps anything. Removing the documented guard therefore break
 naive test would notice. The corner test in `e2e/deaths.spec.mjs` places an asteroid at the
 origin and is the only spec that fails when the guard goes.
 
+### Why the sketch is constructed on the window load event
+
+p5 defers `_start`, and therefore `preload`, to the window load event whenever `document.readyState`
+is not already `complete`. By that point `p5.sound`'s `init` hook has incremented p5's preload
+counter and started loading its audio worklet from a blob URL, which needs no network. If that
+worklet resolves before the load event fires, the counter reaches zero early, `_runIfPreloadsAreDone`
+runs `_setup`, and the sketch sets up with nothing loaded: `p5.textFont` throws "null font passed to
+textFont" on a font that was never fetched, the canvas keeps p5's default 100x100, and `Game` is
+built holding undefined images.
+
+Constructing the instance once the document is complete makes p5 run `_start` inside the constructor,
+where `preload()` executes in the same synchronous block as the `init` hook. A promise cannot resolve
+in between, so `preload` cannot lose the race. `e2e/boot.spec.mjs` holds the load event open with a
+slow image to make the race deterministic, and fails without this.
+
 ### Why `module.hot.decline()` in `src/index.js`
 p5's `preload` → `setup` lifecycle binds to the module-scope variables (`spaceQuest`, `ship`, `heart`) at first load. When webpack HMR hot-replaces `index.js`, the new module re-runs and resets those `let` bindings to `undefined`, but p5 does not re-run `preload` — so `setup` can fire (triggered by an async preload-tracker decrement from `p5.sound`) with `spaceQuest` still `undefined`, and `p5.textFont(null)` throws. Declining HMR forces a full page reload on edits, which re-runs the entire lifecycle.

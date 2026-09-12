@@ -27,7 +27,7 @@ let heart;
 let spaceQuest;
 
 // p5 SKETCH
-export const Canvas = new p5((p5) => {
+const sketch = (p5) => {
   let soundManager = new SoundManager(p5);
   let input = new Input(p5);
   let run = new Run();
@@ -87,7 +87,19 @@ export const Canvas = new p5((p5) => {
     p5.resizeCanvas(findOutWidth(), findOutHeight());
     background = new Background(p5);
   };
-});
+};
+
+// p5 defers _start, and therefore preload, to the window load event whenever the document is not
+// already complete. p5.sound's init hook has by then incremented the preload counter and started
+// loading its audio worklet, so if that worklet resolves before the load event the counter hits
+// zero and p5 runs setup before preload has ever run. setup then calls textFont on a font that was
+// never loaded and p5 throws. Constructing once the document is complete makes p5 run _start inside
+// the constructor, where preload cannot lose the race.
+if (document.readyState === "complete") {
+  new p5(sketch);
+} else {
+  window.addEventListener("load", () => new p5(sketch), { once: true });
+}
 
 window.top.document.onkeydown = function (evt) {
   evt = evt || window.event;

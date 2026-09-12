@@ -35,6 +35,11 @@ comes from an explicit `step()`, and nothing in the engine reads wall time: a de
 count that `setMinimumDeathFrames` shortens. Anything that waits and then checks is racing the
 game: asteroids drift, the ship dies, and shots cross the whole canvas in under a second.
 
+`freeze()` cancels the animation frame p5 has already queued as well as calling `p5.noLoop()`, which
+only stops the *next* frame being scheduled. Without the cancel, one frame still fires, and on a
+loaded machine it arrives mid test and adds a frame no `step()` asked for. That showed up as a death
+ending one frame early in roughly one run in three.
+
 Arrange everything the test depends on. `parkAsteroids` stops the drift before a test places
 what it cares about. The RNG is never seeded, because a test that sets the positions it needs
 does not care what the RNG chose.

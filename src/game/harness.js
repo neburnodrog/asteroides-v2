@@ -23,6 +23,11 @@ export function attachHarness({ p5, run, getGame }) {
     /** TIME */
     freeze() {
       p5.noLoop();
+      // noLoop only stops the next frame being scheduled. A frame already queued still fires, and
+      // on a loaded machine it can arrive in the middle of a test and add a frame no step() asked
+      // for, which shows up as a death ending one frame early. p5's own remove() cancels it the
+      // same way.
+      if (p5._requestAnimId) window.cancelAnimationFrame(p5._requestAnimId);
     },
 
     resume() {
