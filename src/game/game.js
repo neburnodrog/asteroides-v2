@@ -3,18 +3,11 @@ import GameOverScreen from "./state/gameOverScreen";
 import { StartMenuScreen, LevelUpScreen } from "./state/startMenuScreen";
 import GameState from "./gameState";
 import { shipVsAsteroids, shotsVsAsteroids } from "./collisions";
-import { findClearing } from "./clearing";
 
 /** GAME ELEMENTS */
 import Ship from "./elements/ship";
 import Scoreboard from "./elements/scoreboard";
 import Asteroids from "./elements/asteroids";
-
-// The clearing the ship comes back into: nothing inside this radius, and nothing due to enter
-// it within this many frames. The look ahead covers the 30 blinking frames plus one second of
-// play, which is player reaction time rather than ship acceleration.
-const CLEARING_RADIUS = 300;
-const CLEARING_LOOK_AHEAD = 90;
 
 const ASTEROID_HITS = {
   X: { points: 20, sound: "asteroidBreakL" },
@@ -77,29 +70,14 @@ export default class Game {
     }
   }
 
-  findClearing() {
-    return findClearing({
-      asteroids: this.asteroids.array,
-      width: this.p5.width,
-      height: this.p5.height,
-      radius: CLEARING_RADIUS,
-      lookAhead: CLEARING_LOOK_AHEAD,
-    });
+  shipIsOverlapping() {
+    return shipVsAsteroids(this.ship, this.asteroids.array) !== null;
   }
 
-  // A death keeps the field, so it rebuilds the ship in place rather than the Game. The search
-  // runs once per frame from the moment the state asks for it until it returns a point.
-  advanceDeath() {
-    if (this.state.advanceDeath(() => this.findClearing())) {
-      this.ship.rebuildAt(this.state.spawnPoint);
-    }
-  }
-
-  checkIfCollisions() {
-    if (!this.state.isPlaying()) return;
-
-    const hit = shipVsAsteroids(this.ship, this.asteroids.array);
-    if (!hit) return;
+  // A death keeps the field, so it rebuilds the ship in place rather than the Game. The ship
+  // comes back where it died, so the point has to be read before handleExplosion nulls it.
+  killShip() {
+    const returnPoint = { ...this.ship.position };
 
     this.ship.handleExplosion();
 
@@ -108,21 +86,41 @@ export default class Game {
     }
 
     const wasFinalDeath = this.run.loseLife();
-    this.state.shipDied({ wasFinalDeath });
+    this.state.shipDied({ wasFinalDeath, returnPoint });
 
     if (wasFinalDeath && this.soundManager) {
       this.soundManager.play("gameOver");
     }
   }
 
+  advanceDeath() {
+    const action = this.state.advanceDeath(() => this.shipIsOverlapping());
+
+    if (action === "return") this.ship.rebuildAt(this.state.returnPoint);
+    // The grace ran its full length and the ship is still inside an asteroid. That is an
+    // ordinary death: it costs a life and starts another absence at the same point.
+    if (action === "kill") this.killShip();
+  }
+
+  checkIfCollisions() {
+    if (!this.state.isPlaying()) return;
+    if (!this.shipIsOverlapping()) return;
+
+    this.killShip();
+  }
+
   // DRAW
   playGame() {
     this.p5.frameRate(60);
     // CHECK STATES
+    // advanceDeath runs first so the absence and the ghost start and end on a frame boundary.
+    // Were it to run after checkIfCollisions, the frame a death begins would already be counted
+    // as a frame of the absence, and the frame a ghost ends would still have its collision
+    // check skipped, making the ship immune for one frame longer than it is drawn as a ghost.
+    this.advanceDeath();
     this.checkIfCollisions();
     this.checkForHits();
     this.checkIfExplodedAsteroids();
-    this.advanceDeath();
     this.checkIfLevelCompleted();
 
     // RENDER ELEMENTS
@@ -138,6 +136,7 @@ export default class Game {
         break;
       case "playing":
       case "dying":
+      case "ghost":
         this.playGame();
         break;
       case "levelComplete":

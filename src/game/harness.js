@@ -11,10 +11,10 @@
 export function attachHarness({ p5, run, getGame }) {
   const game = () => getGame();
 
-  // Reported as a boolean rather than two floats, so a spec asserts the ship came back where
-  // the outline promised without naming a coordinate.
-  const atSpawnPoint = (g) => {
-    const point = g.state.spawnPoint;
+  // Reported as a boolean rather than two floats, so a spec asserts the ship came back where it
+  // died without naming a coordinate.
+  const atReturnPoint = (g) => {
+    const point = g.state.returnPoint;
     if (!point) return false;
     return g.ship.position.x === point.x && g.ship.position.y === point.y;
   };
@@ -38,11 +38,12 @@ export function attachHarness({ p5, run, getGame }) {
       for (let i = 0; i < frames; i++) p5.redraw();
     },
 
-    // A death lasts this many frames at minimum, then as long as it takes for a clearing to
-    // exist. Shortening it keeps the real code path under test instead of bypassing it. A
-    // rebuild after a cleared level makes a new GameState, so call this again after one.
-    setMinimumDeathFrames(frames) {
-      game().state.minimumDeathFrames = frames;
+    // How long the ship is off the canvas before the ghost begins. Shortening it keeps the real
+    // code path under test instead of bypassing it, and leaves the ghost at its real length,
+    // which is what the specs measure. A rebuild after a cleared level makes a new GameState, so
+    // call this again after one.
+    setAbsenceFrames(frames) {
+      game().state.absenceFrames = frames;
     },
 
     /** READING */
@@ -52,8 +53,11 @@ export function attachHarness({ p5, run, getGame }) {
         state: g.state.current,
         nextState: g.state.nextState,
         deathFrames: g.state.deathFrames,
-        spawnPoint: g.state.spawnPoint,
-        shipAtSpawnPoint: atSpawnPoint(g),
+        ghostFrames: g.state.ghostFrames,
+        ghostLength: g.state.ghostLength,
+        ghostWindow: g.state.ghostWindow,
+        returnPoint: g.state.returnPoint,
+        shipAtReturnPoint: atReturnPoint(g),
         canvas: { width: p5.width, height: p5.height },
         score: run.score,
         lives: run.lives,
@@ -65,6 +69,9 @@ export function attachHarness({ p5, run, getGame }) {
         shipExploded: g.ship.exploded,
         shipDebris: g.ship.shipDebris.length,
         shipMoving: g.ship.velocity.x !== 0 || g.ship.velocity.y !== 0,
+        // The one float in here. A death keeps the heading, so a spec asserts this is the same
+        // number either side of one rather than asserting any particular angle.
+        shipHeading: g.ship.angleOfShip,
       };
     },
 
@@ -79,6 +86,12 @@ export function attachHarness({ p5, run, getGame }) {
       if (level !== undefined) run.level = level;
     },
 
+    // Kills the ship where it stands, the same path a collision takes. Specs about the ghost
+    // need a death that does not leave an asteroid parked on the return point.
+    killShip() {
+      game().killShip();
+    },
+
     // Asks index.js for a rebuild on the next frame, the same signal GameState sends.
     requestRebuild(state) {
       game().state.nextState = state;
@@ -87,6 +100,14 @@ export function attachHarness({ p5, run, getGame }) {
     /** ARRANGING THE FIELD */
     clearField() {
       game().asteroids.array = [];
+    },
+
+    // Drops every asteroid past the first n, so a spec can arrange a field of exactly the size
+    // it cares about without depending on what the level spawned.
+    keepAsteroids(n) {
+      const g = game();
+      g.asteroids.array = g.asteroids.array.slice(0, n);
+      return g.asteroids.array.length;
     },
 
     // Stops every asteroid and lines them along the bottom edge, clear of the ship at the
@@ -132,29 +153,12 @@ export function attachHarness({ p5, run, getGame }) {
     },
 
     // Places one asteroid at an exact point. The radius comes back because it is random, and a
-    // spec that aims this asteroid at a clearing needs it to work out which frame the disc
-    // crosses the edge of the circle.
+    // spec that aims this asteroid at the ship needs it to work out when the discs overlap.
     putAsteroidAt({ x, y, index = 0 }) {
       const asteroid = game().asteroids.array[index];
       asteroid.velocity = { x: 0, y: 0 };
       asteroid.position = { x, y };
       return { x, y, radius: asteroid.radius };
-    },
-
-    // Sets one asteroid's velocity so it arrives at the point in that many frames. Aiming past
-    // an edge is how a spec arranges a path that only reaches the point after wrapping.
-    aimAsteroidAt({ index = 0, x, y, arrivalFrames }) {
-      const asteroid = game().asteroids.array[index];
-      asteroid.velocity = {
-        x: (x - asteroid.position.x) / arrivalFrames,
-        y: (y - asteroid.position.y) / arrivalFrames,
-      };
-      return { ...asteroid.velocity };
-    },
-
-    // Runs the clearing search over the field as it stands, with no death and no rebuild.
-    findClearing() {
-      return game().findClearing();
     },
 
     explodeAllAsteroids() {

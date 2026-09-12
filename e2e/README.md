@@ -32,7 +32,7 @@ Three rules, each learned the hard way while verifying the `Run` extraction by h
 
 Own the clock. There is one. The fixture freezes the sketch with `p5.noLoop()` and every frame
 comes from an explicit `step()`, and nothing in the engine reads wall time: a death is a frame
-count that `setMinimumDeathFrames` shortens. Anything that waits and then checks is racing the
+count whose absence `setAbsenceFrames` shortens. Anything that waits and then checks is racing the
 game: asteroids drift, the ship dies, and shots cross the whole canvas in under a second.
 
 `freeze()` cancels the animation frame p5 has already queued as well as calling `p5.noLoop()`, which
@@ -57,6 +57,6 @@ Sound. It needs a user gesture the headless browser will not give, and `SoundMan
 on a missing key by design.
 
 Exact positions and velocities. `snapshot()` reports counts, states and a `shipMoving` boolean
-rather than floats, so a physics tweak does not fail an unrelated test. `spawnPoint` is the one
-exception, and a spec asserts a relationship about it, that it is far from a corner or is where
-the ship ended up, never a coordinate.
+rather than floats, so a physics tweak does not fail an unrelated test. `returnPoint` and
+`shipHeading` are the two exceptions, and a spec asserts a relationship about each, that the ship
+ended up where it died on the heading it died with, never a coordinate or an angle.

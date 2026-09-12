@@ -4,8 +4,6 @@ import ShipTrace from "./shipTrace";
 import { randomInteger, calcVectorValue } from "../helpers";
 
 const PI = Math.PI;
-// The outline alternates every BLINK_PERIOD frames while the spawn point is locked.
-const BLINK_PERIOD = 5;
 
 export default class Ship {
   constructor(p5, game, image) {
@@ -68,11 +66,14 @@ export default class Ship {
   }
 
   fireIfPressed() {
-    if (this.game.input.wasPressed("shoot")) {
-      this.shots.push(new Shot(this.p5, this));
-      if (this.game?.soundManager) {
-        this.game.soundManager.play("shoot");
-      }
+    const pressed = this.game.input.wasPressed("shoot");
+    // A ghost reads the press and throws it away rather than leaving it unread, so nothing the
+    // player held down during the ghost fires on the frame the ship becomes mortal.
+    if (!pressed || this.game.state.isGhost()) return;
+
+    this.shots.push(new Shot(this.p5, this));
+    if (this.game?.soundManager) {
+      this.game.soundManager.play("shoot");
     }
   }
 
@@ -125,12 +126,12 @@ export default class Ship {
   }
 
   // A death rebuilds the ship, not the Game, so this is the whole of the clean slate: back at
-  // the spawn point, stationary, pointing the way it started, with the wreck cleared away.
+  // the point it died, stationary, with the wreck cleared away. The heading survives, so the
+  // ghost faces the way the player was flying when it died.
   rebuildAt({ x, y }) {
     this.position = { x, y };
     this.velocity = { x: 0, y: 0 };
     this.acceleration = 0;
-    this.angleOfShip = 0;
     this.exploded = false;
     this.shipDebris = [];
     this.traces = [];
@@ -163,24 +164,6 @@ export default class Ship {
     );
   }
 
-  drawRebuildOutline() {
-    const { spawnPoint, deathFrames } = this.game.state;
-    if (!this.game.state.isDying() || !spawnPoint) return;
-    if (Math.floor(deathFrames / BLINK_PERIOD) % 2 === 1) return;
-
-    const { p5 } = this;
-    const nose = this.shipLength / 2;
-    const tail = this.shipWidth / 2;
-
-    p5.push();
-    p5.translate(spawnPoint.x, spawnPoint.y);
-    p5.noFill();
-    p5.stroke(255);
-    p5.strokeWeight(2);
-    p5.triangle(nose, 0, -nose, -tail, -nose, tail);
-    p5.pop();
-  }
-
   /** LOOP */
   draw() {
     const { p5 } = this;
@@ -210,14 +193,19 @@ export default class Ship {
 
     if (this.exploded) {
       this.shipDebris.forEach((debris) => debris.draw());
-      this.drawRebuildOutline();
     } else {
       // RENDERS THE SHIP ITSELF
-      p5.push();
-      p5.translate(this.position.x, this.position.y);
-      p5.rotate(this.angleOfShip);
-      p5.image(this.image, 5, 0, this.shipLength, this.shipWidth);
-      p5.pop();
+      // A ghost blinks and fades in off one curve owned by GameState, so the player watches the
+      // protection run out. Null is a dark frame of the blink.
+      const alpha = this.game.state.ghostAlpha();
+      if (alpha !== null) {
+        p5.push();
+        p5.tint(255, 255 * alpha);
+        p5.translate(this.position.x, this.position.y);
+        p5.rotate(this.angleOfShip);
+        p5.image(this.image, 5, 0, this.shipLength, this.shipWidth);
+        p5.pop();
+      }
 
       this.fireIfPressed();
     }

@@ -6,14 +6,14 @@ const VERBS = [
   "freeze",
   "resume",
   "step",
-  "setMinimumDeathFrames",
+  "setAbsenceFrames",
   "snapshot",
   "startRun",
   "setRun",
+  "killShip",
   "requestRebuild",
   "clearField",
-  "aimAsteroidAt",
-  "findClearing",
+  "keepAsteroids",
   "parkAsteroids",
   "putAsteroidsOnShip",
   "putAsteroidInFrontOfShip",
@@ -57,14 +57,24 @@ export const test = base.extend({
       await page.keyboard.up(key);
     };
 
-    // Kills the ship and steps out the death, shortened so the suite does not spend three
-    // seconds of frames per death. The real code path still runs: the search still has to find
-    // a clearing, and putAsteroidsOnShip parks the rest of the field out of the way so it does.
-    // The death ends on the frame the counter reaches its minimum, the death frame included.
-    api.killShipAndRebuild = async (minimumDeathFrames = 40) => {
-      await api.setMinimumDeathFrames(minimumDeathFrames);
-      await api.putAsteroidsOnShip(1);
-      await api.step(minimumDeathFrames);
+    // Kills the ship with nothing near it and steps out the absence, leaving the game in a ghost
+    // on a clear return point. The absence is shortened so the suite does not spend two seconds
+    // of frames on it; the ghost runs its real length, which is what the ghost specs measure.
+    api.enterGhost = async (absenceFrames = 20) => {
+      await api.setAbsenceFrames(absenceFrames);
+      await api.parkAsteroids();
+      await api.killShip();
+      await api.step(absenceFrames);
+
+      const arrived = await api.snapshot();
+      expect(arrived).toMatchObject({ state: "ghost", ghostFrames: 0 });
+      return arrived;
+    };
+
+    // The whole death, absence and ghost, leaving the ship mortal again.
+    api.killShipAndRebuild = async (absenceFrames = 20) => {
+      const { ghostWindow } = await api.enterGhost(absenceFrames);
+      await api.step(ghostWindow);
     };
 
     await api.freeze();
