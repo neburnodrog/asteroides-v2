@@ -44,11 +44,11 @@ test.describe("the high score table", () => {
     });
   });
 
-  test("a shot that lands on the death frame is in the score that gets recorded", async ({
+  test("a shot that lands on the frame the run ends scores nothing", async ({
     asteroides: a,
   }) => {
     await a.startRun();
-    await a.setRun({ lives: 1 });
+    await a.setRun({ score: 300, lives: 1 });
     await a.parkAsteroids();
 
     // The shot is created during the ship's own draw, so it is in flight from the next frame.
@@ -56,16 +56,37 @@ test.describe("the high score table", () => {
     expect((await a.snapshot()).shots).toBe(1);
 
     // One asteroid does both jobs on the next frame: it overlaps the ship, and the shot that has
-    // moved 15px off the ship's centre is still well inside its radius.
+    // moved 15px off the ship's centre is still well inside its radius. The death comes first,
+    // so the 20 points the X would have paid are never awarded.
     await a.putAsteroidsOnShip(1);
     await a.step();
 
-    // 20 points for an X. The entry has to hold 20, not the 0 the score was when the ship died.
     expect(await a.snapshot()).toMatchObject({
       state: "gameOver",
-      score: 20,
+      score: 300,
       rank: 1,
-      highScores: [{ score: 20, level: 1 }],
+      highScores: [{ score: 300, level: 1 }],
+    });
+  });
+
+  test("a shot that lands during an ordinary death still scores", async ({
+    asteroides: a,
+  }) => {
+    await a.startRun();
+    await a.setAbsenceFrames(20);
+    await a.parkAsteroids();
+
+    await a.press("Space");
+    expect((await a.snapshot()).shots).toBe(1);
+
+    // Three lives, so this death is survivable and the run is still being played.
+    await a.putAsteroidsOnShip(1);
+    await a.step();
+
+    expect(await a.snapshot()).toMatchObject({
+      state: "dying",
+      lives: 2,
+      score: 20,
     });
   });
 

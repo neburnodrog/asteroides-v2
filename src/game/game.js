@@ -27,7 +27,6 @@ export default class Game {
     // Where the run that ended on this Game landed in the high score table, or null. A death is
     // not a rebuild, so this survives until the player confirms the game over screen.
     this.rank = null;
-    this.runEnded = false;
 
     /** VIEWS */
     this.gameOverScreen = new GameOverScreen(p5, this);
@@ -46,7 +45,13 @@ export default class Game {
     this.ship.stopThrust();
   }
 
+  // Hits keep counting through an ordinary death, absence and ghost alike, because the run is
+  // still being played. A run that has just ended takes nothing more: the last life is spent on
+  // the frame this returns early, so a shot still in the air cannot add to the score the game
+  // over screen shows and the table has already recorded.
   checkForHits() {
+    if (this.state.isGameOver()) return;
+
     const hits = shotsVsAsteroids(this.ship.shots, this.asteroids.array);
 
     for (const { shot, asteroid } of hits) {
@@ -98,10 +103,12 @@ export default class Game {
 
     const wasFinalDeath = this.run.loseLife();
 
-    // Flagged here and recorded at the end of the frame rather than now. checkForHits runs after
-    // checkIfCollisions and handleExplosion does not clear the shots, so a shot already in flight
-    // still scores on the frame the ship dies. The score is not final until it has.
-    if (wasFinalDeath) this.runEnded = true;
+    // The score is final the moment the last life is spent, because checkForHits stops awarding
+    // once the state is gameOver. The rank is therefore measured against the table as it stood
+    // before the run, and written once per run.
+    if (wasFinalDeath) {
+      this.rank = this.highScores.record(this.run.score, this.run.level);
+    }
 
     this.state.shipDied({ wasFinalDeath, returnPoint });
 
@@ -117,15 +124,6 @@ export default class Game {
     // The grace ran its full length and the ship is still inside an asteroid. That is an
     // ordinary death: it costs a life and starts another absence at the same point.
     if (action === "kill") this.killShip();
-  }
-
-  // The last thing the frame that ended the run does. The rank is measured against the table as
-  // it stood before the run, and the flag is consumed, so a run records exactly one entry.
-  recordIfRunEnded() {
-    if (!this.runEnded) return;
-    this.runEnded = false;
-
-    this.rank = this.highScores.record(this.run.score, this.run.level);
   }
 
   checkIfCollisions() {
@@ -148,7 +146,6 @@ export default class Game {
     this.checkForHits();
     this.checkIfExplodedAsteroids();
     this.checkIfLevelCompleted();
-    this.recordIfRunEnded();
 
     // RENDER ELEMENTS
     this.asteroids.draw();

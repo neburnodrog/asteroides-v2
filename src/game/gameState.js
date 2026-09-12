@@ -142,6 +142,10 @@ export default class GameState {
     return this.current === "playing";
   }
 
+  isGameOver() {
+    return this.current === "gameOver";
+  }
+
   isGhost() {
     return this.current === "ghost";
   }
