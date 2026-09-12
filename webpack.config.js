@@ -14,7 +14,9 @@ module.exports = {
     },
     open: true,
     host: "localhost",
-    port: 8080,
+    // PORT lets a second checkout serve itself without evicting the first. Playwright reads the
+    // same variable, so the suite and the server always agree.
+    port: Number(process.env.PORT) || 8080,
     hot: true,
   },
   plugins: [

@@ -8,7 +8,9 @@
 // There is one clock. Frames advance only through step(), and nothing in the engine reads wall
 // time. Nothing in a spec should wait and hope.
 
-export function attachHarness({ p5, run, getGame }) {
+import { STORAGE_KEY } from "./highScores.js";
+
+export function attachHarness({ p5, run, highScores, getGame }) {
   const game = () => getGame();
 
   // Reported as a boolean rather than two floats, so a spec asserts the ship came back where it
@@ -62,6 +64,9 @@ export function attachHarness({ p5, run, getGame }) {
         score: run.score,
         lives: run.lives,
         level: run.level,
+        highScores: highScores.entries(),
+        // Where the run that just ended landed, or null. Only a game over sets it.
+        rank: g.rank,
         asteroids: g.asteroids.array.length,
         asteroidSizes: g.asteroids.array.map((a) => a.size).sort().join(""),
         debris: g.asteroids.asteroidDebris.length,
@@ -95,6 +100,39 @@ export function attachHarness({ p5, run, getGame }) {
     // Asks index.js for a rebuild on the next frame, the same signal GameState sends.
     requestRebuild(state) {
       game().state.nextState = state;
+    },
+
+    /** ARRANGING THE HIGH SCORE TABLE */
+    readHighScores() {
+      return highScores.entries();
+    },
+
+    // Filled through record(), the same door a finished run uses, so no spec depends on a second
+    // way of writing the table.
+    setHighScores(entries) {
+      highScores.clear();
+      [...entries]
+        .sort((a, b) => b.score - a.score)
+        .forEach(({ score, level }) => highScores.record(score, level));
+
+      return highScores.entries();
+    },
+
+    clearHighScores() {
+      highScores.clear();
+    },
+
+    // What a private window does to every write for the rest of the page. Breaking the browser
+    // API rather than the module keeps the module's real catch under test.
+    breakStorage() {
+      Storage.prototype.setItem = function () {
+        throw new Error("storage is not available");
+      };
+    },
+
+    // A hand edited value. The key comes from the module, so a spec names no storage detail.
+    corruptStorage() {
+      window.localStorage.setItem(STORAGE_KEY, "{ not json");
     },
 
     /** ARRANGING THE FIELD */

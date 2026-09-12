@@ -14,6 +14,7 @@ import "./images/favicon.ico";
 import Background from "./game/elements/background.js";
 import Game from "./game/game";
 import Run from "./game/run.js";
+import HighScores from "./game/highScores.js";
 import { findOutHeight, findOutWidth } from "./game/helpers";
 
 import SoundManager from "./game/soundManager.js";
@@ -31,9 +32,13 @@ const sketch = (p5) => {
   let soundManager = new SoundManager(p5);
   let input = new Input(p5);
   let run = new Run();
+  let highScores = new HighScores();
 
   const resetSketch = (current) => {
-    game = new Game(p5, soundManager, input, run, current, { ship, heart });
+    game = new Game(p5, soundManager, input, run, highScores, current, {
+      ship,
+      heart,
+    });
   };
 
   const attachTestHarnessIfAsked = () => {
@@ -44,7 +49,7 @@ const sketch = (p5) => {
       if (!window.location.search.includes("e2e=1")) return;
 
       import("./game/harness.js").then(({ attachHarness }) => {
-        attachHarness({ p5, run, getGame: () => game });
+        attachHarness({ p5, run, highScores, getGame: () => game });
       });
     }
   };
