@@ -8,7 +8,7 @@ Browser-based Asteroids arcade game clone built with p5.js and bundled with Webp
 - Build (dev): `npm run build:dev`
 - Build (prod): `npm run build:prod`
 - Watch: `npm run watch`
-- Deploy: `npm run deploy` (pushes `dist/` to gh-pages branch)
+- Deploy: push to `main`. Vercel's git integration builds the commit and promotes it to production at https://asteroides-v2.vercel.app. `vercel.json` holds the build command and output directory. There is no deploy script.
 - E2E tests: `npm run test:e2e` (Playwright starts the dev server itself)
 - E2E tests, watch mode: `npm run test:e2e:ui`
 - Dev server without opening a browser: `npm run start:test`
@@ -71,7 +71,7 @@ See **ARCHITECTURE.md** for the module map and game-loop invariants.
 
 ## Workflow
 
-- Single branch (`main`). The repo has a `gh-pages` remote branch for the deployed build — never commit source there manually; only `npm run deploy` should touch it.
+- Single branch (`main`). Pushing it deploys to Vercel, so a push is a release. The `gh-pages` remote branch is a dead deploy target kept for history: nothing should push to it, and Vercel fails every preview build it triggers because that branch carries no lockfile.
 - Commit style observed: short, lowercase imperative ("add explosion", "fix levels", "bump dependencies"). No conventional-commit prefix is required.
 - No PR template, no CI. Solo project — keep it simple.
 
