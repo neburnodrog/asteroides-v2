@@ -1,6 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const baseURL = `http://localhost:${process.env.PORT || 8080}`;
+// Coerced exactly as webpack.config.js does it, so a bad PORT sends both to the same place
+// rather than leaving the suite polling a URL the server never bound.
+const baseURL = `http://localhost:${Number(process.env.PORT) || 8080}`;
 
 export default defineConfig({
   testDir: "./e2e",

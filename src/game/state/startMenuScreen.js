@@ -3,14 +3,15 @@ export class StartMenuScreen {
     this.p5 = p5;
     this.game = game;
     this.title = { text: "ASTEROiDES", size: 52, position: { x: 0, y: -200 } };
-    // Five rows are what fits in the gap between the title and the level line, so nothing else
-    // on the menu moves. The table stores ten either way, which makes showing more a layout
-    // change and not a schema change.
+    // The whole table, in columns of five. Five rows are what fits in the gap between the title
+    // and the level line, so a second column is what buys the other five without moving anything
+    // else on the menu. A table of five or fewer draws one centred column.
     this.scores = {
       heading: "BEST RUNS",
       headingSize: 18,
       rowSize: 16,
-      count: 5,
+      perColumn: 5,
+      columnGap: 220,
       top: -152,
       spacing: 21,
     };
@@ -63,20 +64,25 @@ export class StartMenuScreen {
   _renderScores() {
     if (!this.scores) return;
 
-    const rows = this.game.highScores.entries().slice(0, this.scores.count);
+    const rows = this.game.highScores.entries();
     if (rows.length === 0) return;
 
+    const { headingSize, rowSize, perColumn, columnGap, top, spacing } = this.scores;
     const p5 = this.p5;
+    const columns = Math.ceil(rows.length / perColumn);
 
-    p5.textSize(this.scores.headingSize);
-    p5.text(this.scores.heading, 0, this.scores.top);
+    p5.textSize(headingSize);
+    p5.text(this.scores.heading, 0, top);
 
-    p5.textSize(this.scores.rowSize);
+    p5.textSize(rowSize);
     rows.forEach((row, index) => {
+      const column = Math.floor(index / perColumn);
+      const line = index % perColumn;
+
       p5.text(
         `${index + 1}  ${row.score}  LEVEL ${row.level}`,
-        0,
-        this.scores.top + this.scores.spacing * (index + 1)
+        (column - (columns - 1) / 2) * columnGap,
+        top + spacing * (line + 1)
       );
     });
   }

@@ -31,8 +31,11 @@ function sanitise(entries) {
     .slice(0, MAX_ENTRIES);
 }
 
-function qualifies(score, table) {
-  if (!Number.isFinite(score) || score <= 0) return false;
+// Both numbers are checked, not just the score. An entry that load-time validation would reject
+// must never be written, or it would show on the menu and vanish on the next page load.
+function qualifies(score, level, table) {
+  if (!isCount(score) || score <= 0) return false;
+  if (!isCount(level)) return false;
   if (table.length < MAX_ENTRIES) return true;
   return score > table[table.length - 1].score;
 }
@@ -50,7 +53,7 @@ export default class HighScores {
   // 1 based rank, or null when the score does not qualify. Mirrors Run.loseLife: the caller gets
   // the verdict rather than the numbers to decide for itself.
   record(score, level) {
-    if (!qualifies(score, this.table)) return null;
+    if (!qualifies(score, level, this.table)) return null;
 
     // A tie ranks below the run that got there first, so the place is the first entry this score
     // beats outright.

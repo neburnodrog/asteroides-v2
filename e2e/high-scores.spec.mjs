@@ -44,6 +44,31 @@ test.describe("the high score table", () => {
     });
   });
 
+  test("a shot that lands on the death frame is in the score that gets recorded", async ({
+    asteroides: a,
+  }) => {
+    await a.startRun();
+    await a.setRun({ lives: 1 });
+    await a.parkAsteroids();
+
+    // The shot is created during the ship's own draw, so it is in flight from the next frame.
+    await a.press("Space");
+    expect((await a.snapshot()).shots).toBe(1);
+
+    // One asteroid does both jobs on the next frame: it overlaps the ship, and the shot that has
+    // moved 15px off the ship's centre is still well inside its radius.
+    await a.putAsteroidsOnShip(1);
+    await a.step();
+
+    // 20 points for an X. The entry has to hold 20, not the 0 the score was when the ship died.
+    expect(await a.snapshot()).toMatchObject({
+      state: "gameOver",
+      score: 20,
+      rank: 1,
+      highScores: [{ score: 20, level: 1 }],
+    });
+  });
+
   test("the rank is measured against the table as it stood before the run", async ({
     asteroides: a,
   }) => {

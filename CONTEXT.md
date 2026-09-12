@@ -59,7 +59,7 @@ _Avoid_: reset, restart, respawn. A reset ends the run and starts a new one.
 
 **High score table**
 The ten best runs on this browser, best first. It outlives every run and survives closing the
-tab. The start menu shows the best five.
+tab. The start menu lists all of it, in columns of five.
 _Avoid_: leaderboard, scoreboard, high scores. A scoreboard is the strip on the top of the
 canvas during play.
 
