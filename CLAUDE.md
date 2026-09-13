@@ -67,6 +67,7 @@ See **ARCHITECTURE.md** for the module map and game-loop invariants.
 - **A cleared level, a game over and a return to the menu reconstruct the Game**. `resetSketch()` in `index.js` builds a new `Game` around the long-lived `Run`, which carries the score, the lives and the level across. Do not try to "soft reset" those three paths by mutation, follow the reconstruction pattern. A death is the exception: it keeps the surviving asteroids, so it rebuilds only the ship, in place. See the invariants in ARCHITECTURE.md.
 - **Arrow keys and space are blocked at the document level** (`window.top.document.onkeydown` in `index.js`) to prevent page scroll. If you change input handling, preserve this guard or shooting/movement will scroll the page.
 - **`p5.windowResized` rebuilds the Background**. Any class that caches canvas dimensions must also rebuild on resize, or it will desync after a window resize.
+- **Movement lives in `step()`, `draw()` only renders.** `playGame()` steps every asteroid and the ship before any check measures, so the collision test reads the frame it is about to draw. Do not advance a colliding entity's position from `draw()`. Debris and traces are the exception.
 - **Class-based state is mutated in `draw()` each frame** (60fps). Allocating new objects inside `draw()` (especially Vector instances) creates GC pressure — reuse instances when possible.
 
 ## Workflow
