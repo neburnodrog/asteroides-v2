@@ -9,6 +9,7 @@
 // time. Nothing in a spec should wait and hope.
 
 import { STORAGE_KEY } from "./highScores.js";
+import { NOSE_REACH } from "./geometry.js";
 
 export function attachHarness({ p5, run, highScores, getGame }) {
   const game = () => getGame();
@@ -179,23 +180,46 @@ export function attachHarness({ p5, run, highScores, getGame }) {
     },
 
     // Parks one asteroid in the ship's line of fire. The ship starts at angle 0, facing +x.
-    putAsteroidInFrontOfShip({ size = "X", distance = 220 } = {}) {
+    // `gapFromNose` is the clear air between the ship's nose and the asteroid's circumcircle,
+    // and is what a spec about contact should use; `distance` is from the ship's origin and is
+    // what the shooting specs already use. Radius, sides and angle are settable because the
+    // shape of the contact is the thing under test and the RNG picks all three.
+    putAsteroidInFrontOfShip({
+      size = "X",
+      distance = 220,
+      gapFromNose,
+      radius,
+      sides,
+      angle,
+    } = {}) {
       const g = game();
       harness.parkAsteroids();
 
       const target = g.asteroids.array[0];
       target.size = size;
-      target.position = { x: g.ship.position.x + distance, y: g.ship.position.y };
+      if (radius !== undefined) target.radius = radius;
+      if (sides !== undefined) target.sides = sides;
+      if (angle !== undefined) target.rotation.angle = angle;
 
-      return { size: target.size, radius: target.radius };
+      const along =
+        gapFromNose === undefined
+          ? distance
+          : NOSE_REACH + target.radius + gapFromNose;
+
+      target.position = { x: g.ship.position.x + along, y: g.ship.position.y };
+
+      return { size: target.size, radius: target.radius, sides: target.sides };
     },
 
     // Places one asteroid at an exact point. The radius comes back because it is random, and a
-    // spec that aims this asteroid at the ship needs it to work out when the discs overlap.
-    putAsteroidAt({ x, y, index = 0 }) {
+    // spec that aims this asteroid at the ship needs it to work out when the shapes overlap.
+    putAsteroidAt({ x, y, index = 0, radius, sides, angle }) {
       const asteroid = game().asteroids.array[index];
       asteroid.velocity = { x: 0, y: 0 };
       asteroid.position = { x, y };
+      if (radius !== undefined) asteroid.radius = radius;
+      if (sides !== undefined) asteroid.sides = sides;
+      if (angle !== undefined) asteroid.rotation.angle = angle;
       return { x, y, radius: asteroid.radius };
     },
 

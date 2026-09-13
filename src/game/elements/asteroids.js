@@ -107,6 +107,12 @@ class Asteroid {
         return { angle: 0, velocity: (Math.random() - 0.5) * this.asteroidVelocityMap[this.size] / 50 }
     }
 
+    // What it is drawn with. The stroke is centred on the edge, so collision reads this to work
+    // out how far past the geometry the pixels reach.
+    get strokeWeight() {
+        return this.strokes[this.size];
+    }
+
     // CALCULATIONS
     calcRotation() {
         this.rotation.angle += this.rotation.velocity;

@@ -111,7 +111,7 @@ _Avoid_: menu, view, page
 
 **Hull**
 The ship's outline: four vertices in local coordinates, nose first, filled with the same magenta
-the shots and the debris use. Drawn, not a sprite. Collision does not read it yet.
+the shots and the debris use. Drawn, not a sprite. Collision reads it as the two triangles its notch forces it into.
 _Avoid_: sprite, ship image, model
 
 **Debris**
@@ -138,7 +138,7 @@ One shot overlapping one asteroid on one frame. A frame can produce several, and
 appear in more than one pair.
 _Avoid_: collision, impact
 
-**Hitbox padding**
-The 20 pixels added to an asteroid's radius when testing it against the ship, so the ship dies
-just before the two shapes visually touch. Hand tuned.
-_Avoid_: margin, tolerance, fudge
+**Stroke allowance**
+The half stroke width added to an asteroid's collision polygon, so the shape that kills is the
+shape whose pixels are on screen. 4px for an X, 3 for an M, 2 for an S.
+_Avoid_: margin, tolerance, fudge, padding
