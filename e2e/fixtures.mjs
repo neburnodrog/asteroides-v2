@@ -21,6 +21,7 @@ const VERBS = [
   "keepAsteroids",
   "parkAsteroids",
   "setShipVelocity",
+  "showHitboxes",
   "putAsteroidsOnShip",
   "putAsteroidInFrontOfShip",
   "putAsteroidAt",

@@ -3,6 +3,7 @@ import GameOverScreen from "./state/gameOverScreen";
 import { StartMenuScreen, LevelUpScreen } from "./state/startMenuScreen";
 import GameState from "./gameState";
 import { shipVsAsteroids, shotsVsAsteroids, GHOST_CLEARANCE } from "./collisions";
+import { drawHitboxes } from "./debugDraw";
 
 /** GAME ELEMENTS */
 import Ship from "./elements/ship";
@@ -167,6 +168,10 @@ export default class Game {
     this.asteroids.draw();
     this.ship.draw();
     this.scoreboard.draw(this.run);
+
+    // Off in every build. The harness is the only thing that turns it on, and the harness
+    // exists only in a development build loaded with ?e2e=1.
+    drawHitboxes(this.p5, this.ship, this.asteroids.array);
   }
 
   draw() {

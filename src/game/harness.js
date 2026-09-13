@@ -10,6 +10,7 @@
 
 import { STORAGE_KEY } from "./highScores.js";
 import { NOSE_REACH } from "./geometry.js";
+import { setHitboxes } from "./debugDraw.js";
 
 export function attachHarness({ p5, run, highScores, getGame }) {
   const game = () => getGame();
@@ -163,6 +164,12 @@ export function attachHarness({ p5, run, highScores, getGame }) {
       });
 
       return list.length;
+    },
+
+    // Strokes the shapes collisions.js measures, so a death that looks wrong can be watched
+    // rather than guessed at.
+    showHitboxes(on = true) {
+      setHitboxes(on);
     },
 
     // Sets the ship moving without pressing anything. Thrust reaches a given speed over dozens
