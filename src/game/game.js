@@ -2,7 +2,7 @@
 import GameOverScreen from "./state/gameOverScreen";
 import { StartMenuScreen, LevelUpScreen } from "./state/startMenuScreen";
 import GameState from "./gameState";
-import { shipVsAsteroids, shotsVsAsteroids } from "./collisions";
+import { shipVsAsteroids, shotsVsAsteroids, GHOST_CLEARANCE } from "./collisions";
 
 /** GAME ELEMENTS */
 import Ship from "./elements/ship";
@@ -90,6 +90,13 @@ export default class Game {
     return shipVsAsteroids(this.ship, this.asteroids.array) !== null;
   }
 
+  // What the ghost asks: not "is it touching" but "is it safe to become solid here".
+  shipIsCrowded() {
+    return (
+      shipVsAsteroids(this.ship, this.asteroids.array, GHOST_CLEARANCE) !== null
+    );
+  }
+
   // A death keeps the field, so it rebuilds the ship in place rather than the Game. The ship
   // comes back where it died, so the point has to be read before handleExplosion nulls it.
   killShip() {
@@ -118,10 +125,10 @@ export default class Game {
   }
 
   advanceDeath() {
-    const action = this.state.advanceDeath(() => this.shipIsOverlapping());
+    const action = this.state.advanceDeath(() => this.shipIsCrowded());
 
     if (action === "return") this.ship.rebuildAt(this.state.returnPoint);
-    // The grace ran its full length and the ship is still inside an asteroid. That is an
+    // The grace ran its full length and an asteroid is still crowding the ship. That is an
     // ordinary death: it costs a life and starts another absence at the same point.
     if (action === "kill") this.killShip();
   }

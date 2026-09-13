@@ -142,3 +142,8 @@ _Avoid_: collision, impact
 The half stroke width added to an asteroid's collision polygon, so the shape that kills is the
 shape whose pixels are on screen. 4px for an X, 3 for an M, 2 for an S.
 _Avoid_: margin, tolerance, fudge, padding
+
+**Ghost clearance**
+The room a ghost wants around the ship before it becomes solid: 10px beyond the shapes touching.
+The one caller that measures overlap with anything other than contact.
+_Avoid_: grace radius, safe zone

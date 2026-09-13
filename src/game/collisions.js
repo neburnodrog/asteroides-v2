@@ -6,6 +6,11 @@ import {
   convexOverlap,
 } from "./geometry.js";
 
+// Room the ghost wants around the ship before it becomes solid, in pixels. The kill test asks
+// about contact and passes nothing; this is the one caller that asks for more, because
+// materialising with an asteroid edge against the nose is not a fair place to become mortal.
+export const GHOST_CLEARANCE = 10;
+
 // An asteroid is stroked on its edge, so its pixels reach half a stroke beyond its geometry and
 // collision follows the pixels. For a regular polygon an outward offset of d is exact at
 // radius + d / cos(PI / sides): every edge moves out by d and every vertex by a little more,
