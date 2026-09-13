@@ -35,7 +35,7 @@ export default class Game {
     this.scoreboard = new Scoreboard(p5, images.heart);
 
     /** GAME ELEMENTS */
-    this.ship = new Ship(p5, this, images.ship);
+    this.ship = new Ship(p5, this);
     this.asteroids = new Asteroids(p5, run.level);
   }
 

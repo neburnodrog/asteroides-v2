@@ -6,7 +6,6 @@ import "./css/index.css";
 import font from "./font/SpaceQuest-yOY3.ttf";
 
 // IMAGES
-import shipImage from "./images/ship.png";
 import heartImage from "./images/heart.png";
 import "./images/favicon.ico";
 
@@ -23,7 +22,6 @@ import Input from "./game/input.js";
 // global variables
 let background;
 let game;
-let ship;
 let heart;
 let spaceQuest;
 
@@ -37,7 +35,6 @@ const sketch = (p5) => {
   const resetSketch = (current) => {
     game?.teardown();
     game = new Game(p5, soundManager, input, run, highScores, current, {
-      ship,
       heart,
     });
   };
@@ -56,7 +53,6 @@ const sketch = (p5) => {
   };
 
   p5.preload = () => {
-    ship = p5.loadImage(shipImage);
     heart = p5.loadImage(heartImage);
     spaceQuest = p5.loadFont(font);
     soundManager.preload();

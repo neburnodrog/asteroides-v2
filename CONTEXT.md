@@ -109,6 +109,11 @@ A full canvas state the player reads instead of playing: the start menu, the lev
 the game over screen. Every screen waits on one confirm press.
 _Avoid_: menu, view, page
 
+**Hull**
+The ship's outline: four vertices in local coordinates, nose first, filled with the same magenta
+the shots and the debris use. Drawn, not a sprite. Collision does not read it yet.
+_Avoid_: sprite, ship image, model
+
 **Debris**
 The short lived fragments thrown off when an asteroid breaks or the ship explodes. They are
 drawn, they fade, they collide with nothing.
@@ -135,5 +140,5 @@ _Avoid_: collision, impact
 
 **Hitbox padding**
 The 20 pixels added to an asteroid's radius when testing it against the ship, so the ship dies
-just before the sprites visually touch. Hand tuned.
+just before the two shapes visually touch. Hand tuned.
 _Avoid_: margin, tolerance, fudge

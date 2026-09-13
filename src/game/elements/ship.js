@@ -5,15 +5,25 @@ import { randomInteger, calcVectorValue } from "../helpers";
 
 const PI = Math.PI;
 
+// The hull in local coordinates, nose first. The ship faces +x and the origin is `position`.
+// An explicit vertex list rather than a regular polygon, because the notch in the tail is the
+// silhouette.
+const HULL = [
+  [30, 0],
+  [-20, -15],
+  [-11, 0],
+  [-20, 15],
+];
+
+// The same magenta the shots and the ship debris use, so the ship, what it fires and what it
+// breaks into all read as one colour.
+const FILL = [255, 1, 241];
+const STROKE = [255, 0, 98];
+
 export default class Ship {
-  constructor(p5, game, image) {
+  constructor(p5, game) {
     this.p5 = p5;
     this.game = game;
-
-    // STATIC PROPERTIES
-    this.image = image;
-    this.shipLength = 50;
-    this.shipWidth = 30;
 
     // DYNAMIC PROPERTIES
     this.acceleration = 0; // only when arrow_up is pressed
@@ -175,6 +185,19 @@ export default class Ship {
     );
   }
 
+  /** RENDERING */
+  // Call inside a translate/rotate onto the ship. The ghost after a death fades through alpha,
+  // which the hull has to carry on its fill and its stroke.
+  drawHull(alpha) {
+    const { p5 } = this;
+    p5.fill(...FILL, 255 * alpha);
+    p5.stroke(...STROKE, 255 * alpha);
+    p5.strokeWeight(2);
+    p5.beginShape();
+    for (const [x, y] of HULL) p5.vertex(x, y);
+    p5.endShape(p5.CLOSE);
+  }
+
   /** LOOP */
   draw() {
     const { p5 } = this;
@@ -211,10 +234,9 @@ export default class Ship {
       const alpha = this.game.state.ghostAlpha();
       if (alpha !== null) {
         p5.push();
-        p5.tint(255, 255 * alpha);
         p5.translate(this.position.x, this.position.y);
         p5.rotate(this.angleOfShip);
-        p5.image(this.image, 5, 0, this.shipLength, this.shipWidth);
+        this.drawHull(alpha);
         p5.pop();
       }
 
