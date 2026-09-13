@@ -4,6 +4,7 @@ import {
   ngonVertices,
   transformInto,
   convexOverlap,
+  pointInPolygon,
 } from "./geometry.js";
 
 // Room the ghost wants around the ship before it becomes solid, in pixels. The kill test asks
@@ -26,6 +27,15 @@ export function collisionReach(asteroid, clearance = 0) {
 
 // Reused every frame for every pair. Nothing here allocates once the game is running.
 const rockScratch = [];
+
+// Its own buffer. The two tests never run at the same moment, but sharing one would make that a
+// requirement rather than a coincidence.
+const shotRockScratch = [];
+
+// A shot is drawn as an 8px point, so its pixels reach 4px from its position. The ship is not
+// given the same treatment, because its hull is concave and cannot be offset outward; a point
+// can.
+const SHOT_REACH = 4;
 const triangleScratch = [
   [[0, 0], [0, 0], [0, 0]],
   [[0, 0], [0, 0], [0, 0]],
@@ -113,13 +123,17 @@ export function shotsVsAsteroids(shots, asteroids) {
   const hits = [];
 
   for (const asteroid of asteroids) {
+    const rock = ngonVertices(
+      asteroid.position.x,
+      asteroid.position.y,
+      collisionReach(asteroid, SHOT_REACH),
+      asteroid.sides,
+      asteroid.rotation.angle,
+      shotRockScratch
+    );
+
     for (const shot of shots) {
-      if (
-        Math.hypot(
-          shot.position.x - asteroid.position.x,
-          shot.position.y - asteroid.position.y
-        ) < asteroid.radius
-      ) {
+      if (pointInPolygon(shot.position.x, shot.position.y, rock)) {
         hits.push({ shot, asteroid });
       }
     }
