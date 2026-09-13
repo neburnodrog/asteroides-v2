@@ -5,6 +5,7 @@ import {
   transformInto,
   convexOverlap,
   pointInPolygon,
+  hullTriangleBuffer,
 } from "./geometry.js";
 
 // Room the ghost wants around the ship before it becomes solid, in pixels. The kill test asks
@@ -36,10 +37,7 @@ const shotRockScratch = [];
 // given the same treatment, because its hull is concave and cannot be offset outward; a point
 // can.
 const SHOT_REACH = 4;
-const triangleScratch = [
-  [[0, 0], [0, 0], [0, 0]],
-  [[0, 0], [0, 0], [0, 0]],
-];
+const triangleScratch = hullTriangleBuffer();
 
 // Enough to keep a 50px per frame closing speed from skipping the smallest asteroid, and low
 // enough that a pair costs a bounded amount even in the worst frame.

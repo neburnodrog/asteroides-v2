@@ -1,13 +1,15 @@
-import { HULL_TRIANGLES, ngonVertices, transformInto } from "./geometry.js";
+import {
+  HULL_TRIANGLES,
+  ngonVertices,
+  transformInto,
+  hullTriangleBuffer,
+} from "./geometry.js";
 import { collisionReach } from "./collisions.js";
 
 // Draws what collisions.js actually tests, by asking it for the same numbers. A second opinion
 // about where the hitboxes are would be worth nothing.
 const rockScratch = [];
-const triangleScratch = [
-  [[0, 0], [0, 0], [0, 0]],
-  [[0, 0], [0, 0], [0, 0]],
-];
+const triangleScratch = hullTriangleBuffer();
 
 // Module scope rather than a field on Game, because a level up, a game over and a return to the
 // menu each build a new Game. A flag on the instance would switch itself off mid session.

@@ -123,7 +123,6 @@ export default class Ship {
     const { x, y } = this.position;
     const { width, height } = this.p5;
 
-    // A wrap is a teleport, not a path. Collision substeps read this and stop interpolating.
     this.wrapped = x < 0 || x > width || y < 0 || y > height;
 
     if (x < 0) return { x: x + width, y: y };
@@ -223,9 +222,6 @@ export default class Ship {
 
   draw() {
     const { p5 } = this;
-
-    // A dead ship stops shooting, but its shots, traces and debris keep running until they
-    // expire.
 
     // CLEANUP
     this.filterOldShots();

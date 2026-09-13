@@ -22,6 +22,11 @@ export const HULL_TRIANGLES = [
   [HULL[0], HULL[2], HULL[3]],
 ];
 
+// A scratch buffer shaped for HULL_TRIANGLES, so neither caller hand-copies the triangle count.
+export function hullTriangleBuffer() {
+  return HULL_TRIANGLES.map((triangle) => triangle.map(() => [0, 0]));
+}
+
 // What the broad phase rejects on.
 export const HULL_REACH = Math.max(...HULL.map(([x, y]) => Math.hypot(x, y)));
 
@@ -45,7 +50,6 @@ export function ngonVertices(x, y, radius, sides, angle, out) {
   return out;
 }
 
-// Local vertices rotated by `angle` and moved to (x, y).
 export function transformInto(local, x, y, angle, out) {
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);

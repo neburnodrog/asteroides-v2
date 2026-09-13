@@ -132,18 +132,20 @@ class Asteroid {
         this.position.x += this.velocity.x;
         this.position.y += this.velocity.y;
 
+        // All four read the same pre-wrap position, so an earlier branch cannot change what a
+        // later one judges.
         const { x, y } = this.position;
-        // A wrap is a teleport, not a path. Collision substeps read this and stop interpolating.
-        this.wrapped =
-            x > width + this.radius ||
-            x < 0 - this.radius ||
-            y > height + this.radius ||
-            y < 0 - this.radius;
+        const offRight = x > width + this.radius;
+        const offLeft = x < 0 - this.radius;
+        const offBottom = y > height + this.radius;
+        const offTop = y < 0 - this.radius;
 
-        if (x > width + this.radius) this.position.x = 0 - this.radius;
-        if (x < 0 - this.radius) this.position.x = width + this.radius;
-        if (y > height + this.radius) this.position.y = 0 - this.radius;
-        if (y < 0 - this.radius) this.position.y = height + this.radius;
+        this.wrapped = offRight || offLeft || offBottom || offTop;
+
+        if (offRight) this.position.x = 0 - this.radius;
+        if (offLeft) this.position.x = width + this.radius;
+        if (offBottom) this.position.y = 0 - this.radius;
+        if (offTop) this.position.y = height + this.radius;
     }
 
     step() {

@@ -111,7 +111,8 @@ _Avoid_: menu, view, page
 
 **Hull**
 The ship's outline: four vertices in local coordinates, nose first, filled with the same magenta
-the shots and the debris use. Drawn, not a sprite. Collision reads it as the two triangles its notch forces it into.
+the shots and the debris use. Drawn, not a sprite. Collision reads it as the two triangles its
+notch forces it into.
 _Avoid_: sprite, ship image, model
 
 **Debris**
