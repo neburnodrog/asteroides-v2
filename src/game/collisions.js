@@ -26,6 +26,30 @@ const triangleScratch = [
   [[0, 0], [0, 0], [0, 0]],
 ];
 
+// Enough to keep a 50px per frame closing speed from skipping the smallest asteroid, and low
+// enough that a pair costs a bounded amount even in the worst frame.
+const MAX_SUBSTEPS = 8;
+
+const lerp = (from, to, t) => from + (to - from) * t;
+
+function substepsFor(ship, asteroid) {
+  // A wrap teleports an entity to the far edge, so the straight line between its two positions
+  // this frame is not a path anything travelled. Test the end state only.
+  if (ship.wrapped || asteroid.wrapped) return 1;
+
+  const dx =
+    ship.position.x - ship.prevPosition.x -
+    (asteroid.position.x - asteroid.prevPosition.x);
+  const dy =
+    ship.position.y - ship.prevPosition.y -
+    (asteroid.position.y - asteroid.prevPosition.y);
+
+  const travelled = Math.hypot(dx, dy);
+  const smallest = Math.min(HULL_REACH, asteroid.radius);
+
+  return Math.min(MAX_SUBSTEPS, Math.max(1, Math.ceil(travelled / (smallest * 0.5))));
+}
+
 // `clearance` is extra room in pixels around the asteroid. A death asks about contact and passes
 // nothing. The ghost asks whether it is safe to become solid and passes more.
 export function shipVsAsteroids(ship, asteroids, clearance = 0) {
@@ -33,29 +57,44 @@ export function shipVsAsteroids(ship, asteroids, clearance = 0) {
 }
 
 function touches(ship, asteroid, clearance) {
+  const steps = substepsFor(ship, asteroid);
+
+  for (let i = 1; i <= steps; i++) {
+    if (touchesAt(ship, asteroid, clearance, i / steps)) return true;
+  }
+
+  return false;
+}
+
+// Both the position and the rotation interpolate. The ship turns PI/40 per frame, which is 4.5
+// degrees, too much to hold still across a frame it also crossed 50px of canvas in.
+function touchesAt(ship, asteroid, clearance, t) {
   const reach = collisionReach(asteroid, clearance);
 
-  // Broad phase. Most pairs are misses and stop here, before a single vertex is transformed.
-  const dx = ship.position.x - asteroid.position.x;
-  const dy = ship.position.y - asteroid.position.y;
-  if (Math.hypot(dx, dy) > HULL_REACH + reach) return false;
+  const shipX = lerp(ship.prevPosition.x, ship.position.x, t);
+  const shipY = lerp(ship.prevPosition.y, ship.position.y, t);
+  const rockX = lerp(asteroid.prevPosition.x, asteroid.position.x, t);
+  const rockY = lerp(asteroid.prevPosition.y, asteroid.position.y, t);
+
+  if (Math.hypot(shipX - rockX, shipY - rockY) > HULL_REACH + reach) return false;
 
   const rock = ngonVertices(
-    asteroid.position.x,
-    asteroid.position.y,
+    rockX,
+    rockY,
     reach,
     asteroid.sides,
-    asteroid.rotation.angle,
+    lerp(asteroid.prevAngle, asteroid.rotation.angle, t),
     rockScratch
   );
 
-  // The hull is concave, so SAT reads it as the two triangles the notch forces it into.
+  const shipAngle = lerp(ship.prevAngle, ship.angleOfShip, t);
+
   for (let i = 0; i < HULL_TRIANGLES.length; i++) {
     const triangle = transformInto(
       HULL_TRIANGLES[i],
-      ship.position.x,
-      ship.position.y,
-      ship.angleOfShip,
+      shipX,
+      shipY,
+      shipAngle,
       triangleScratch[i]
     );
 
