@@ -1,16 +1,19 @@
+import { ngonVertices } from './geometry.js';
+
 export function randomInteger(a, b) {
     // random integer between a(included) & b(excluded).
     return Math.floor((Math.random() * (b - a))) + a;
 }
 
+// Reused across every asteroid on every frame. drawPolygon is called from inside a
+// translate/rotate, so the vertices it asks for are centred on the origin at angle 0.
+const polygonScratch = [];
+
 export function drawPolygon(p5, x, y, radius, npoints) {
-    let angle = p5.TWO_PI / npoints;
+    const vertices = ngonVertices(x, y, radius, npoints, 0, polygonScratch);
+
     p5.beginShape();
-    for (let a = 0; a < p5.TWO_PI; a += angle) {
-        let sx = x + p5.cos(a) * radius;
-        let sy = y + p5.sin(a) * radius;
-        p5.vertex(sx, sy);
-    }
+    for (const [vx, vy] of vertices) p5.vertex(vx, vy);
     p5.endShape(p5.CLOSE);
 }
 

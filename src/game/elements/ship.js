@@ -2,18 +2,9 @@ import Shot from "./shot";
 import ShipDebris from "./shipDebris";
 import ShipTrace from "./shipTrace";
 import { randomInteger, calcVectorValue } from "../helpers";
+import { HULL } from "../geometry.js";
 
 const PI = Math.PI;
-
-// The hull in local coordinates, nose first. The ship faces +x and the origin is `position`.
-// An explicit vertex list rather than a regular polygon, because the notch in the tail is the
-// silhouette.
-const HULL = [
-  [30, 0],
-  [-20, -15],
-  [-11, 0],
-  [-20, 15],
-];
 
 // The same magenta the shots and the ship debris use, so the ship, what it fires and what it
 // breaks into all read as one colour.
