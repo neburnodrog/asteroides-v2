@@ -17,13 +17,13 @@ export default class Shot {
         this.position.y += this.velocity.y;
     }
 
+    step() {
+        this.calcPosition();
+    }
+
     draw() {
         const p5 = this.p5;
 
-        // calculations
-        this.calcPosition();
-
-        // draw the shot
         p5.push();
         p5.strokeWeight(8);
         p5.stroke("#ff01ef");

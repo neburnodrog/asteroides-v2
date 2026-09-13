@@ -165,6 +165,13 @@ export function attachHarness({ p5, run, highScores, getGame }) {
       return list.length;
     },
 
+    // Sets the ship moving without pressing anything. Thrust reaches a given speed over dozens
+    // of frames, and a spec that needs a known displacement in one frame cannot spend them.
+    // Resistance still applies on the next step, so the ship travels velocity * 0.98.
+    setShipVelocity({ x = 0, y = 0 } = {}) {
+      game().ship.velocity = { x, y };
+    },
+
     // Stacks n asteroids on the ship. Everything else is parked first, so the only overlap in
     // the frame is the one the test asked for.
     putAsteroidsOnShip(n = 1) {

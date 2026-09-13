@@ -25,3 +25,25 @@ test.describe("the asteroid's real edge", () => {
     expect(await a.snapshot()).toMatchObject({ state: "dying", lives: 2 });
   });
 });
+
+test.describe("the frame the collision test reads", () => {
+  // With movement inside draw(), checkIfCollisions ran before the entities moved and judged the
+  // previous frame's positions. At the ship's terminal speed that is 50px of error. Here the
+  // ship starts 5.6px clear of the asteroid's nearest corner and travels 19.6px in one frame, so
+  // a test that reads the frame it is about to draw kills on that frame and a stale one does not.
+  test("a ship that crosses into an asteroid dies on that frame", async ({
+    asteroides: a,
+  }) => {
+    await a.startRun();
+    await a.putAsteroidInFrontOfShip({
+      ...ROCK,
+      angle: CORNER_TO_SHIP,
+      gapFromNose: 10,
+    });
+    await a.setShipVelocity({ x: 20, y: 0 });
+
+    await a.step();
+
+    expect(await a.snapshot()).toMatchObject({ state: "dying", lives: 2 });
+  });
+});

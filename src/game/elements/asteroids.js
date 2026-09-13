@@ -60,6 +60,10 @@ export default class Asteroids {
         return Math.floor(randomInteger(1, 3) * Math.sqrt(radius));
     };
 
+    step() {
+        this.array.forEach(asteroid => asteroid.step());
+    }
+
     draw() {
         this.asteroidDebris = this.asteroidDebris.filter(debris => !debris.faded);
 
@@ -81,6 +85,10 @@ class Asteroid {
         this.sides = randomInteger(7, 13);
         this.radius = this.initialRadius(size);
         this.rotation = this.initialRotation();
+
+        this.prevPosition = { x: position.x, y: position.y };
+        this.prevAngle = 0;
+        this.wrapped = false;
 
         this.strokes = { X: 8, M: 6, S: 4 }
         // this.color = {
@@ -124,18 +132,31 @@ class Asteroid {
         this.position.x += this.velocity.x;
         this.position.y += this.velocity.y;
 
-        if (this.position.x > width + this.radius) this.position.x = 0 - this.radius;
-        if (this.position.x < 0 - this.radius) this.position.x = width + this.radius;
-        if (this.position.y > height + this.radius) this.position.y = 0 - this.radius;
-        if (this.position.y < 0 - this.radius) this.position.y = height + this.radius;
+        const { x, y } = this.position;
+        // A wrap is a teleport, not a path. Collision substeps read this and stop interpolating.
+        this.wrapped =
+            x > width + this.radius ||
+            x < 0 - this.radius ||
+            y > height + this.radius ||
+            y < 0 - this.radius;
+
+        if (x > width + this.radius) this.position.x = 0 - this.radius;
+        if (x < 0 - this.radius) this.position.x = width + this.radius;
+        if (y > height + this.radius) this.position.y = 0 - this.radius;
+        if (y < 0 - this.radius) this.position.y = height + this.radius;
+    }
+
+    step() {
+        this.prevPosition.x = this.position.x;
+        this.prevPosition.y = this.position.y;
+        this.prevAngle = this.rotation.angle;
+
+        this.calcRotation();
+        this.calcPosition();
     }
 
     draw() {
         const p5 = this.p5;
-
-        // CALCULATIONS
-        this.calcRotation();
-        this.calcPosition(p5);
 
         // RENDERING
         p5.push();

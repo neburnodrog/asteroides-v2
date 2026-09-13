@@ -23,6 +23,12 @@ export default class Ship {
     this.position = { x: p5.width / 2, y: p5.height / 2 };
     this.angleOfShip = 0; // expressed in radians
 
+    // Where the ship was at the top of this frame. Collision substeps read these, because a
+    // frame at speed is a journey rather than a jump.
+    this.prevPosition = { x: this.position.x, y: this.position.y };
+    this.prevAngle = 0;
+    this.wrapped = false;
+
     // DEPENDANT ELEMENTS
     this.shots = [];
     this.traces = [];
@@ -114,8 +120,11 @@ export default class Ship {
   }
 
   ifOverflowed() {
+    const { x, y } = this.position;
     const { width, height } = this.p5;
-    let { x, y } = this.position;
+
+    // A wrap is a teleport, not a path. Collision substeps read this and stop interpolating.
+    this.wrapped = x < 0 || x > width || y < 0 || y > height;
 
     if (x < 0) return { x: x + width, y: y };
     if (x > width) return { x: x % width, y: y };
@@ -142,6 +151,8 @@ export default class Ship {
   // ghost faces the way the player was flying when it died.
   rebuildAt({ x, y }) {
     this.position = { x, y };
+    this.prevPosition = { x, y };
+    this.wrapped = false;
     this.velocity = { x: 0, y: 0 };
     this.acceleration = 0;
     this.exploded = false;
@@ -190,22 +201,31 @@ export default class Ship {
   }
 
   /** LOOP */
-  draw() {
-    const { p5 } = this;
+  // Everything that moves, ahead of every test that measures. A dead ship stops steering, but
+  // its shots keep flying.
+  step() {
+    this.prevPosition.x = this.position.x;
+    this.prevPosition.y = this.position.y;
+    this.prevAngle = this.angleOfShip;
 
-    // A dead ship stops steering and stops shooting, but its shots, traces and
-    // debris keep running until they expire.
     if (!this.exploded) {
-      // USER ACTIONS
       this.rotateShip();
       this.accelerate();
       this.brakes();
 
-      // CALCULATIONS
       this.velocity = this.calcVelocity();
       this.position = this.calcPosition();
       this.position = this.ifOverflowed();
     }
+
+    this.shots.forEach((shot) => shot.step());
+  }
+
+  draw() {
+    const { p5 } = this;
+
+    // A dead ship stops shooting, but its shots, traces and debris keep running until they
+    // expire.
 
     // CLEANUP
     this.filterOldShots();

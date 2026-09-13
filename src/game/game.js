@@ -136,11 +136,20 @@ export default class Game {
   // DRAW
   playGame() {
     this.p5.frameRate(60);
+
+    // MOVE
+    // Everything moves before anything measures, so every test below reads the frame that is
+    // about to be drawn. With the movement inside draw() the checks judged the previous frame,
+    // which at the ship's terminal speed is 50px of error.
+    this.asteroids.step();
+    this.ship.step();
+
     // CHECK STATES
-    // advanceDeath runs first so the absence and the ghost start and end on a frame boundary.
-    // Were it to run after checkIfCollisions, the frame a death begins would already be counted
-    // as a frame of the absence, and the frame a ghost ends would still have its collision
-    // check skipped, making the ship immune for one frame longer than it is drawn as a ghost.
+    // advanceDeath still leads the checks so the absence and the ghost start and end on a frame
+    // boundary. Were it to run after checkIfCollisions, the frame a death begins would already
+    // be counted as a frame of the absence, and the frame a ghost ends would still have its
+    // collision check skipped, making the ship immune for one frame longer than it is drawn as
+    // a ghost.
     this.advanceDeath();
     this.checkIfCollisions();
     this.checkForHits();

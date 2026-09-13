@@ -20,6 +20,7 @@ const VERBS = [
   "clearField",
   "keepAsteroids",
   "parkAsteroids",
+  "setShipVelocity",
   "putAsteroidsOnShip",
   "putAsteroidInFrontOfShip",
   "putAsteroidAt",
