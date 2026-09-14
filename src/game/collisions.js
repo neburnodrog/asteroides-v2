@@ -35,26 +35,31 @@ const shotRockScratch = [];
 
 // A shot is drawn as an 8px point, so its pixels reach 4px from its position. The ship is not
 // given the same treatment, because its hull is concave and cannot be offset outward; a point
-// can.
-const SHOT_REACH = 4;
+// can. Exported so the overlay draws the shape the shot test measures rather than a second
+// opinion about it.
+export const SHOT_REACH = 4;
 const triangleScratch = hullTriangleBuffer();
 
-// Enough to keep a 50px per frame closing speed from skipping the smallest asteroid, and low
-// enough that a pair costs a bounded amount even in the worst frame.
+// The fastest closing speed the game produces is a shot against a small asteroid head on:
+// 20.88px plus 7.07px, under 28px against a 40px rock, which the formula below covers in 3
+// samples. The cap is headroom for a future speed change, and it keeps a pair's cost bounded.
 const MAX_SUBSTEPS = 8;
 
 const lerp = (from, to, t) => from + (to - from) * t;
 
-function substepsFor(ship, asteroid) {
+// How many places along the frame a pair is measured at. `mover` is the ship or a shot. A shot
+// carries no `wrapped` flag because it is filtered out of the game at the canvas edge rather
+// than wrapped, so it has no teleporting frame to suppress.
+function substepsFor(mover, asteroid) {
   // A wrap teleports an entity to the far edge, so the straight line between its two positions
   // this frame is not a path anything travelled. Test the end state only.
-  if (ship.wrapped || asteroid.wrapped) return 1;
+  if (mover.wrapped || asteroid.wrapped) return 1;
 
   const dx =
-    ship.position.x - ship.prevPosition.x -
+    mover.position.x - mover.prevPosition.x -
     (asteroid.position.x - asteroid.prevPosition.x);
   const dy =
-    ship.position.y - ship.prevPosition.y -
+    mover.position.y - mover.prevPosition.y -
     (asteroid.position.y - asteroid.prevPosition.y);
 
   const travelled = Math.hypot(dx, dy);
@@ -80,7 +85,7 @@ function touches(ship, asteroid, clearance) {
 }
 
 // Both the position and the rotation interpolate. The ship turns PI/40 per frame, which is 4.5
-// degrees, too much to hold still across a frame it also crossed 50px of canvas in.
+// degrees, too much to hold still at a sample taken part way through the frame.
 function touchesAt(ship, asteroid, clearance, t) {
   const reach = collisionReach(asteroid, clearance);
 
@@ -120,22 +125,47 @@ function touchesAt(ship, asteroid, clearance, t) {
 export function shotsVsAsteroids(shots, asteroids) {
   const hits = [];
 
+  // Asteroid outer, because the reach is the asteroid's and is worked out once for all the shots
+  // in flight.
   for (const asteroid of asteroids) {
-    const rock = ngonVertices(
-      asteroid.position.x,
-      asteroid.position.y,
-      collisionReach(asteroid, SHOT_REACH),
-      asteroid.sides,
-      asteroid.rotation.angle,
-      shotRockScratch
-    );
+    const reach = collisionReach(asteroid, SHOT_REACH);
 
     for (const shot of shots) {
-      if (pointInPolygon(shot.position.x, shot.position.y, rock)) {
-        hits.push({ shot, asteroid });
-      }
+      if (crosses(shot, asteroid, reach)) hits.push({ shot, asteroid });
     }
   }
 
   return hits;
+}
+
+function crosses(shot, asteroid, reach) {
+  const steps = substepsFor(shot, asteroid);
+
+  for (let i = 1; i <= steps; i++) {
+    if (insideAt(shot, asteroid, reach, i / steps)) return true;
+  }
+
+  return false;
+}
+
+// A shot is a point, so the sampled test stays point in polygon rather than becoming SAT.
+function insideAt(shot, asteroid, reach, t) {
+  const shotX = lerp(shot.prevPosition.x, shot.position.x, t);
+  const shotY = lerp(shot.prevPosition.y, shot.position.y, t);
+  const rockX = lerp(asteroid.prevPosition.x, asteroid.position.x, t);
+  const rockY = lerp(asteroid.prevPosition.y, asteroid.position.y, t);
+
+  // The reach is the circumradius, so a point further out than that is outside the polygon too.
+  if (Math.hypot(shotX - rockX, shotY - rockY) > reach) return false;
+
+  const rock = ngonVertices(
+    rockX,
+    rockY,
+    reach,
+    asteroid.sides,
+    lerp(asteroid.prevAngle, asteroid.rotation.angle, t),
+    shotRockScratch
+  );
+
+  return pointInPolygon(shotX, shotY, rock);
 }

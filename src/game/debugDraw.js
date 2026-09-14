@@ -4,11 +4,12 @@ import {
   transformInto,
   hullTriangleBuffer,
 } from "./geometry.js";
-import { collisionReach } from "./collisions.js";
+import { collisionReach, SHOT_REACH } from "./collisions.js";
 
 // Draws what collisions.js actually tests, by asking it for the same numbers. A second opinion
 // about where the hitboxes are would be worth nothing.
 const rockScratch = [];
+const shotRockScratch = [];
 const triangleScratch = hullTriangleBuffer();
 
 // Module scope rather than a field on Game, because a level up, a game over and a return to the
@@ -26,18 +27,18 @@ export function drawHitboxes(p5, ship, asteroids) {
   p5.noFill();
   p5.strokeWeight(1);
 
+  // An asteroid carries two reaches: what the ship is measured against, and the wider one a
+  // shot is, because a shot is a point drawn 4px thick.
   p5.stroke(0, 255, 0);
+  for (const asteroid of asteroids) {
+    outline(p5, rockOutline(asteroid, collisionReach(asteroid), rockScratch));
+  }
+
+  p5.stroke(255, 255, 0);
   for (const asteroid of asteroids) {
     outline(
       p5,
-      ngonVertices(
-        asteroid.position.x,
-        asteroid.position.y,
-        collisionReach(asteroid),
-        asteroid.sides,
-        asteroid.rotation.angle,
-        rockScratch
-      )
+      rockOutline(asteroid, collisionReach(asteroid, SHOT_REACH), shotRockScratch)
     );
   }
 
@@ -58,6 +59,17 @@ export function drawHitboxes(p5, ship, asteroids) {
   }
 
   p5.pop();
+}
+
+function rockOutline(asteroid, reach, scratch) {
+  return ngonVertices(
+    asteroid.position.x,
+    asteroid.position.y,
+    reach,
+    asteroid.sides,
+    asteroid.rotation.angle,
+    scratch
+  );
 }
 
 function outline(p5, vertices) {

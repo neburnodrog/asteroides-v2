@@ -46,3 +46,30 @@ answer costs one life; substepping the test is bounded and leaves the physics al
 
 Wrap aware collision at the screen seam. Rejected because neither entity draws a duplicate copy
 at the edge, so no pair can look like it touches across it.
+
+## Correction: the substep budget and the ship's speed
+
+This ADR was written against a terminal ship speed of 50px per frame, a figure the plan asserted
+and nobody measured. The ship tops out at 5.88px per frame: thrust is added only while speed is
+under 5, and 2% resistance holds it at (5 + 1) * 0.98. A shot travels 15px per frame plus the
+ship's speed when it was fired, so 20.88px at most, and an S asteroid closes at up to 7.07px.
+The worst relative step in the game is therefore under 28px against a rock 40px across.
+
+Two consequences. The ship's substep loop guards against a future speed change rather than a
+reachable defect, since at 5.88px per frame the ship cannot cross an asteroid within a frame.
+And `MAX_SUBSTEPS` of 8 is never approached in play, where two samples suffice.
+
+The shot test was left unsampled in the original change, which left `collisions.js` holding two
+answers to what a frame is. A shot that entered and left a small asteroid between two frames
+scored nothing, an effect confined to grazing shots: against the smallest asteroid an impact
+parameter between 21.63 and 26.66px crosses a chord shorter than one frame's travel. Both tests
+now sample the frame the same way, through one `substepsFor`, and both suppress sampling for a
+pair where the asteroid wrapped. A shot needs no wrap flag of its own: it is filtered out at the
+canvas edge rather than wrapped, so it has no teleporting frame.
+
+Sampling narrows that window rather than closing it. The substep count is sized by the asteroid's
+radius, which bounds how much of a rock a step may skip, not how thin a chord may be: against the
+smallest asteroid a 20.88px step is read at 3 places, 6.96px apart, so a chord shorter than that
+still falls between two samples. What is left is an impact parameter between 24.98 and 26.66px,
+the outermost 1.7px of the smallest rock in the game. Closing it needs segment against polygon
+rather than a denser sample, and it was not worth the exact test for 1.7px.

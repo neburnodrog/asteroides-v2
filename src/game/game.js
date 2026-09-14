@@ -148,7 +148,7 @@ export default class Game {
     // MOVE
     // Everything moves before anything measures, so every test below reads the frame that is
     // about to be drawn. With the movement inside draw() the checks judged the previous frame,
-    // which at the ship's terminal speed is 50px of error.
+    // which is 5.88px of error at the ship's terminal speed and 20.88px for a shot.
     this.asteroids.step();
     this.ship.step();
 

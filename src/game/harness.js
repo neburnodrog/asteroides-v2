@@ -227,10 +227,14 @@ export function attachHarness({ p5, run, highScores, getGame }) {
 
     // Places one asteroid at an exact point. The radius comes back because it is random, and a
     // spec that aims this asteroid at the ship needs it to work out when the shapes overlap.
-    putAsteroidAt({ x, y, index = 0, radius, sides, angle }) {
+    putAsteroidAt({ x, y, index = 0, size, radius, sides, angle }) {
       const asteroid = game().asteroids.array[index];
       asteroid.velocity = { x: 0, y: 0 };
+      // Spin too, or a spec that placed a chosen corner toward the ship loses that orientation
+      // at up to 0.1 radians a frame while it arranges the rest of the world.
+      asteroid.rotation.velocity = 0;
       asteroid.position = { x, y };
+      if (size !== undefined) asteroid.size = size;
       if (radius !== undefined) asteroid.radius = radius;
       if (sides !== undefined) asteroid.sides = sides;
       if (angle !== undefined) asteroid.rotation.angle = angle;
