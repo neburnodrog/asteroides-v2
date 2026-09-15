@@ -1,5 +1,19 @@
-import { drawPolygon, randomInteger } from '../helpers';
+import { drawFacetedPolygon, drawPolygon, randomInteger } from '../helpers';
 import AsteroidDebris from './asteroidDebris';
+
+// The treatment settled in prototype/asteroid-treatments.html, on the
+// prototype/asteroid-treatments branch. Every number here was picked by eye against a live field.
+const OUTLINE = "#F29F38";
+const BASE_HUE = 33;
+const HUE_JITTER = 12;
+const BASE_SATURATION = 90;
+const SATURATION_JITTER = 4;
+// A rock reads lighter than the one it split from, so a shower of S is legible against its parent.
+const LIGHTNESS = { X: 34, M: 40, S: 46 };
+// How far off centre the fan apex sits, as a fraction of the radius. At 0 the rock is a pinwheel.
+const APEX_OFFSET = 0.3;
+// Lightness swing between the lit and the unlit side of a rock, in HSL points.
+const FACET_CONTRAST = 13;
 
 export default class Asteroids {
     constructor(p5, level, size = 'X') {
@@ -91,11 +105,25 @@ class Asteroid {
         this.wrapped = false;
 
         this.strokes = { X: 8, M: 6, S: 4 }
-        // this.color = {
-        //     fill: { R: randomInteger(119, 166), G: randomInteger(67, 94), B: 5 },
-        //     stroke: { R: randomInteger(174, 200), G: randomInteger(110, 160), B: randomInteger(40, 80) },
-        // }
+        this.look = this.initialLook();
         this.exploded = false;
+    }
+
+    // Built once and never mutated. The apex and the light angle live in the rock's local frame,
+    // so they turn with it and the shading stays put on the rock rather than sliding as it spins.
+    initialLook() {
+        const apexAngle = Math.random() * 2 * Math.PI;
+        const apexReach = this.radius * APEX_OFFSET * (0.4 + Math.random() * 0.6);
+
+        return {
+            apexX: Math.cos(apexAngle) * apexReach,
+            apexY: Math.sin(apexAngle) * apexReach,
+            lightAngle: Math.random() * 2 * Math.PI,
+            hue: BASE_HUE + (Math.random() * 2 - 1) * HUE_JITTER,
+            saturation: BASE_SATURATION + (Math.random() * 2 - 1) * SATURATION_JITTER,
+            lightness: LIGHTNESS[this.size],
+            contrast: FACET_CONTRAST,
+        };
     }
 
     initialVelocity() {
@@ -165,11 +193,13 @@ class Asteroid {
 
         p5.translate(this.position.x, this.position.y);
         p5.rotate(this.rotation.angle);
+
+        drawFacetedPolygon(p5, this.radius, this.sides, this.look);
+
+        // Last, so the facet hairlines cannot bleed over the edge that kills.
         p5.strokeWeight(this.strokes[this.size]);
-        // p5.stroke(...Object.values(this.color.stroke));
-        // p5.fill(...Object.values(this.color.fill))
-        p5.stroke("#F29F38");
-        p5.fill("#A65E05")
+        p5.stroke(OUTLINE);
+        p5.noFill();
         drawPolygon(p5, 0, 0, this.radius, this.sides);
 
         p5.pop();

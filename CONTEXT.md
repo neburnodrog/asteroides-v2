@@ -115,6 +115,17 @@ the shots and the debris use. Drawn, not a sprite. Collision reads it as the two
 notch forces it into.
 _Avoid_: sprite, ship image, model
 
+**Facet**
+One of the triangles an asteroid's interior is divided into, each filled a shade lighter or
+darker than its neighbours. They fan out from the apex to the edges of the outline and never move
+it, so they are the only part of a rock collision does not read.
+_Avoid_: face, panel, shard
+
+**Apex**
+The point inside an asteroid every facet fans from. It sits off centre, at a distance and angle
+fixed when the rock is built, which is what stops the shading reading as a pinwheel.
+_Avoid_: centre, origin, pivot
+
 **Debris**
 The short lived fragments thrown off when an asteroid breaks or the ship explodes. They are
 drawn, they fade, they collide with nothing.
