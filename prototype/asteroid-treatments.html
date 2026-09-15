@@ -1,0 +1,1120 @@
+<meta charset="utf-8">
+<title>Asteroid Treatments</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oxanium:wght@500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+  /* PROTOTYPE. Throwaway. Five ways to draw an asteroid in ASTEROiDES, so the look can be
+     chosen by eye rather than argued about. Open the file directly, no build step.
+     Palette, radii, stroke weights, side counts and velocities are lifted from src/. */
+
+  :root {
+    --ground: #01050F;
+    --panel: #080F1C;
+    --panel-lift: #0D1728;
+    --line: #1A2740;
+    --text: #AFE4FF;
+    --muted: #5C7893;
+    --accent: #F29F38;
+    --ship: #FF01EF;
+
+    --sans: "Oxanium", ui-sans-serif, system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--ground);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .shell {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding-inline: 20px;
+    padding-block: 28px 104px;
+    display: grid;
+    grid-template-columns: 296px minmax(0, 1fr);
+    gap: 28px;
+    align-items: start;
+  }
+
+  /* ---- masthead ---- */
+
+  .masthead {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px 18px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 16px;
+  }
+
+  .masthead h1 {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 26px;
+    letter-spacing: 0.02em;
+    margin: 0;
+    color: var(--text);
+    text-wrap: balance;
+  }
+
+  .masthead p {
+    margin: 0;
+    color: var(--muted);
+    max-width: 62ch;
+  }
+
+  .masthead .tag {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ground);
+    background: var(--accent);
+    padding: 3px 8px;
+  }
+
+  /* ---- control rail ---- */
+
+  .rail {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    position: sticky;
+    top: 20px;
+  }
+
+  .group > h2 {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 3px;
+  }
+
+  .group > .asks {
+    margin: 0 0 12px;
+    color: var(--muted);
+    font-size: 11.5px;
+    line-height: 1.45;
+  }
+
+  .group > .body {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+  }
+
+  .knob { display: grid; gap: 5px; }
+
+  .knob > .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .knob label { color: var(--text); }
+
+  .knob output {
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    height: 18px;
+    margin: 0;
+    background: transparent;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 2px;
+    background: var(--line);
+  }
+  input[type="range"]::-moz-range-track {
+    height: 2px;
+    background: var(--line);
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    margin-top: -5px;
+    background: var(--accent);
+    border: 0;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    background: var(--accent);
+    border: 0;
+    border-radius: 0;
+  }
+
+  select {
+    width: 100%;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--text);
+    background: var(--panel-lift);
+    border: 1px solid var(--line);
+    padding: 6px 8px;
+  }
+
+  .check {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    cursor: pointer;
+  }
+  .check input { accent-color: var(--accent); width: 14px; height: 14px; margin: 0; }
+
+  button {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text);
+    background: var(--panel-lift);
+    border: 1px solid var(--line);
+    padding: 9px 12px;
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+
+  :is(input, select, button, a):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* ---- stage ---- */
+
+  .stage { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+
+  .plate { border: 1px solid var(--line); background: var(--panel); }
+
+  .plate > header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px 16px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .plate h2 {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  .plate .note { color: var(--muted); font-size: 11.5px; }
+
+  canvas { display: block; width: 100%; max-width: 100%; }
+
+  /* ---- verdict panel ---- */
+
+  .callout {
+    border: 1px solid var(--ship);
+    background: color-mix(in srgb, var(--ship) 8%, var(--panel));
+    padding: 11px 14px;
+    color: var(--text);
+    font-size: 12px;
+  }
+  .callout b { color: var(--ship); font-weight: 600; }
+  .callout[hidden] { display: none !important; }
+
+  .readout {
+    margin: 0;
+    padding: 13px 14px;
+    color: var(--muted);
+    font-size: 11.5px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-x: auto;
+  }
+  .readout b { color: var(--text); font-weight: 500; }
+
+  /* ---- variant switcher ---- */
+
+  .switcher {
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    z-index: 20;
+    display: flex;
+    align-items: stretch;
+    border: 1px solid var(--accent);
+    background: var(--ground);
+    box-shadow: 0 6px 26px rgba(0, 0, 0, 0.75);
+    max-width: calc(100vw - 32px);
+  }
+
+  .switcher button {
+    border: 0;
+    background: transparent;
+    font-size: 15px;
+    padding: 0 14px;
+    letter-spacing: 0;
+  }
+
+  .switcher .label {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1px;
+    padding: 7px 16px;
+    border-inline: 1px solid var(--line);
+    min-width: 0;
+  }
+
+  .switcher .key {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .switcher .name {
+    font-size: 12.5px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: minmax(0, 1fr); }
+    .rail { position: static; order: 2; }
+    .stage { order: 1; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+
+<div class="shell">
+  <div class="masthead">
+    <h1>Asteroid Treatments</h1>
+    <span class="tag">Prototype</span>
+    <p>
+      Five ways to draw the rocks, over one seeded field so every variant shows the same
+      asteroids. Radii, side counts, stroke weights, drift speeds and the ship hull are the real
+      values from <span style="color:var(--text)">src/</span>.
+    </p>
+  </div>
+
+  <div class="rail">
+    <section class="group">
+      <h2>Shape</h2>
+      <p class="asks" id="shapeAsks">Settles: how the rock is cut.</p>
+      <div class="body" id="shapeKnobs"></div>
+    </section>
+
+    <section class="group">
+      <h2>Colour</h2>
+      <p class="asks">Settles: how wide the orange family runs, and how hard the light falls.</p>
+      <div class="body">
+        <div class="knob">
+          <div class="row"><label for="baseHue">Base hue</label><output id="baseHueOut"></output></div>
+          <input type="range" id="baseHue" min="0" max="60" step="1" value="33">
+        </div>
+        <div class="knob">
+          <div class="row"><label for="hueJitter">Hue jitter</label><output id="hueJitterOut"></output></div>
+          <input type="range" id="hueJitter" min="0" max="40" step="1" value="12">
+        </div>
+        <div class="knob">
+          <div class="row"><label for="saturation">Saturation</label><output id="saturationOut"></output></div>
+          <input type="range" id="saturation" min="20" max="100" step="1" value="90">
+        </div>
+        <div class="knob">
+          <div class="row"><label for="shadeAmp">Facet contrast</label><output id="shadeAmpOut"></output></div>
+          <input type="range" id="shadeAmp" min="0" max="30" step="1" value="13">
+        </div>
+      </div>
+    </section>
+
+    <section class="group">
+      <h2>Size</h2>
+      <p class="asks">Settles: whether an S rock reads lighter than the X it came from.</p>
+      <div class="body">
+        <label class="check" for="sizeLightness">
+          <input type="checkbox" id="sizeLightness" checked>
+          <span>Lightness keyed to size</span>
+        </label>
+        <div class="knob">
+          <div class="row"><label for="lightStep">Step per size</label><output id="lightStepOut"></output></div>
+          <input type="range" id="lightStep" min="0" max="14" step="1" value="6">
+        </div>
+      </div>
+    </section>
+
+    <section class="group">
+      <h2>Outline</h2>
+      <p class="asks">Settles: what happens to the stroke. Weight stays size-keyed either way, because collision reads it.</p>
+      <div class="body">
+        <select id="outline">
+          <option value="single">One outline, fixed #F29F38</option>
+          <option value="rock">One outline, colour follows the rock</option>
+          <option value="facets">Outline plus hairline facet cuts</option>
+          <option value="none">No outline</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="group">
+      <h2>Scene</h2>
+      <p class="asks">Not a design decision. Context for judging one.</p>
+      <div class="body">
+        <div class="knob">
+          <div class="row"><label for="level">Level</label><output id="levelOut"></output></div>
+          <input type="range" id="level" min="1" max="10" step="1" value="4">
+        </div>
+        <label class="check" for="showShip">
+          <input type="checkbox" id="showShip" checked><span>Ship and shots, for scale</span>
+        </label>
+        <label class="check" for="animate">
+          <input type="checkbox" id="animate" checked><span>Motion at 60fps</span>
+        </label>
+        <label class="check" for="showCollision">
+          <input type="checkbox" id="showCollision"><span>Collision polygon overlay</span>
+        </label>
+        <button type="button" id="reseed">Reseed the field</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="stage">
+    <div class="callout" id="warning" hidden></div>
+
+    <section class="plate">
+      <header>
+        <h2>Specimens</h2>
+        <span class="note">One X, one M, one S. Same rocks in every variant.</span>
+      </header>
+      <canvas id="specimens"></canvas>
+    </section>
+
+    <section class="plate">
+      <header>
+        <h2>Field</h2>
+        <span class="note" id="fieldNote"></span>
+      </header>
+      <canvas id="field"></canvas>
+    </section>
+
+    <section class="plate">
+      <header>
+        <h2>Current settings</h2>
+        <span class="note">Paste this back to settle the decision.</span>
+      </header>
+      <pre class="readout" id="readout"></pre>
+    </section>
+  </div>
+</div>
+
+<div class="switcher" role="group" aria-label="Variant switcher">
+  <button type="button" id="prev" aria-label="Previous variant">&#8592;</button>
+  <div class="label">
+    <span class="key" id="variantKey"></span>
+    <span class="name" id="variantName"></span>
+  </div>
+  <button type="button" id="next" aria-label="Next variant">&#8594;</button>
+</div>
+
+<script>
+  "use strict";
+
+  // ---------------------------------------------------------------- real values from src/
+
+  // asteroids.js: initialRadius, strokes, asteroidVelocityMap
+  const SIZES = {
+    X: { min: 70, max: 95, stroke: 8, speed: 4 },
+    M: { min: 40, max: 55, stroke: 6, speed: 7 },
+    S: { min: 20, max: 30, stroke: 10 - 6, speed: 10 },
+  };
+  SIZES.S.stroke = 4;
+
+  // geometry.js: HULL, nose first, ship faces +x
+  const HULL = [[30, 0], [-20, -15], [-11, 0], [-20, 15]];
+
+  // index.js / stars.js
+  const GROUND = "#01050F";
+  const STAR = "#AFE4FF";
+  const SHIP_FILL = "rgb(255,1,241)";
+  const SHIP_STROKE = "rgb(255,0,98)";
+  const SHOT = "#ff01ef";
+
+  // ---------------------------------------------------------------- variants
+
+  const VARIANTS = [
+    {
+      key: "A",
+      name: "Flat (today)",
+      draw: drawFlat,
+      knobs: [],
+      warning: null,
+    },
+    {
+      key: "B",
+      name: "Off-centre fan facets",
+      draw: drawFan,
+      knobs: [
+        { id: "apexOffset", label: "Apex offset", min: 0, max: 60, value: 30, unit: "% of radius" },
+      ],
+      warning: null,
+    },
+    {
+      key: "C",
+      name: "Two-ring low poly",
+      draw: drawRings,
+      knobs: [
+        { id: "innerScale", label: "Inner ring", min: 25, max: 85, value: 55, unit: "% of radius" },
+      ],
+      warning: null,
+    },
+    {
+      key: "D",
+      name: "Craters",
+      draw: drawCraters,
+      knobs: [
+        { id: "craterCount", label: "Craters", min: 0, max: 5, value: 3, unit: "per rock" },
+        { id: "craterDepth", label: "Crater depth", min: 2, max: 24, value: 11, unit: "% lightness" },
+      ],
+      warning: null,
+    },
+    {
+      key: "E",
+      name: "Rough silhouette",
+      draw: drawRough,
+      knobs: [
+        { id: "roughness", label: "Roughness", min: 0, max: 40, value: 18, unit: "% of radius" },
+      ],
+      warning:
+        "<b>This one moves the outline.</b> ADR-0003 says the shapes that are drawn are the " +
+        "shapes that collide, so picking E means the jittered vertices have to reach " +
+        "collisions.js and geometry.js, and the circle broad phase has to widen to the longest " +
+        "spike. Turn on the collision overlay to see the gap it opens.",
+    },
+  ];
+
+  // ---------------------------------------------------------------- state
+
+  const params = {
+    baseHue: 33,
+    hueJitter: 12,
+    saturation: 90,
+    shadeAmp: 13,
+    sizeLightness: true,
+    lightStep: 6,
+    outline: "single",
+    level: 4,
+    showShip: true,
+    animate: !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    showCollision: false,
+    apexOffset: 30,
+    innerScale: 55,
+    craterCount: 3,
+    craterDepth: 11,
+    roughness: 18,
+  };
+
+  let seed = 20260915;
+  let variantIndex = 0;
+  let rocks = [];
+  let specimens = [];
+
+  // ---------------------------------------------------------------- seeded rng
+
+  function mulberry32(a) {
+    return function () {
+      a |= 0;
+      a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  // ---------------------------------------------------------------- rocks
+
+  function makeRock(rng, size, w, h) {
+    const spec = SIZES[size];
+    return {
+      size,
+      radius: rng() * (spec.max - spec.min) + spec.min,
+      sides: Math.floor(rng() * 6) + 7, // asteroids.js: randomInteger(7, 13) yields 7..12
+      hueDrift: rng() * 2 - 1,
+      satDrift: rng() * 2 - 1,
+      lightAngle: rng() * Math.PI * 2,
+      apexAngle: rng() * Math.PI * 2,
+      apexMag: 0.4 + rng() * 0.6,
+      craters: Array.from({ length: 5 }, () => ({
+        a: rng() * Math.PI * 2,
+        d: rng(),
+        r: rng(),
+        sides: Math.floor(rng() * 3) + 5,
+        rot: rng() * Math.PI * 2,
+      })),
+      jitter: Array.from({ length: 13 }, () => rng() * 2 - 1),
+      angle: rng() * Math.PI * 2,
+      spin: ((rng() - 0.5) * spec.speed) / 50,
+      x: rng() * w,
+      y: rng() * h,
+      vx: (rng() - 0.5) * spec.speed,
+      vy: (rng() - 0.5) * spec.speed,
+    };
+  }
+
+  function buildField(w, h) {
+    const rng = mulberry32(seed);
+    const out = [];
+    // asteroids.js spawns level * 2 large rocks. Half are shown mid-split so the field carries
+    // all three sizes, which is what a level actually looks like a few seconds in.
+    const large = params.level * 2;
+    for (let i = 0; i < large; i++) {
+      const roll = rng();
+      const size = roll < 0.45 ? "X" : roll < 0.78 ? "M" : "S";
+      out.push(makeRock(rng, size, w, h));
+      if (size !== "X" && rng() < 0.5) out.push(makeRock(rng, "S", w, h));
+    }
+    return out;
+  }
+
+  function buildSpecimens() {
+    const rng = mulberry32(seed ^ 0x9e3779b9);
+    return ["X", "M", "S"].map((size) => {
+      const rock = makeRock(rng, size, 0, 0);
+      rock.radius = SIZES[size].max; // biggest of the band, so the cut is legible
+      rock.spin = 0.004;
+      return rock;
+    });
+  }
+
+  // ---------------------------------------------------------------- colour
+
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  const hsl = (h, s, l, a) =>
+    `hsl(${((h % 360) + 360) % 360} ${clamp(s, 0, 100)}% ${clamp(l, 0, 100)}%${a === undefined ? "" : ` / ${a}`})`;
+
+  // The game's fill is hsl(33 94% 34%) and its stroke hsl(33 88% 58%), so the outline sits
+  // 24 points of lightness above the fill. Keep that gap whatever the fill does.
+  const OUTLINE_GAP = 24;
+  const BASE_LIGHT = 34;
+
+  function rockColor(rock) {
+    const hue = params.baseHue + rock.hueDrift * params.hueJitter;
+    const sat = clamp(params.saturation + rock.satDrift * 4, 0, 100);
+    const bump = params.sizeLightness
+      ? { X: 0, M: params.lightStep, S: params.lightStep * 2 }[rock.size]
+      : 0;
+    return { hue, sat, light: BASE_LIGHT + bump };
+  }
+
+  // ---------------------------------------------------------------- geometry
+
+  // geometry.js ngonVertices, in the rock's local frame
+  function ngon(radius, sides, angle, jitter, rough) {
+    const step = (Math.PI * 2) / sides;
+    const out = [];
+    for (let i = 0; i < sides; i++) {
+      const a = (angle || 0) + step * i;
+      const r = jitter ? radius * (1 + jitter[i] * rough) : radius;
+      out.push([Math.cos(a) * r, Math.sin(a) * r]);
+    }
+    return out;
+  }
+
+  function trace(ctx, verts) {
+    ctx.beginPath();
+    for (let i = 0; i < verts.length; i++) {
+      const [x, y] = verts[i];
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+  }
+
+  // Adjacent facets share an edge, and two antialiased fills meeting on one line leave a seam.
+  // Stroking each facet in its own colour seals it.
+  function facet(ctx, verts, fill, hairline) {
+    trace(ctx, verts);
+    ctx.fillStyle = fill;
+    ctx.fill();
+    ctx.lineWidth = hairline ? 1 : 1.2;
+    ctx.strokeStyle = hairline || fill;
+    ctx.lineJoin = "round";
+    ctx.stroke();
+  }
+
+  function outlineRock(ctx, verts, rock, c) {
+    if (params.outline === "none") return;
+    trace(ctx, verts);
+    ctx.lineWidth = SIZES[rock.size].stroke;
+    ctx.lineJoin = "round";
+    ctx.strokeStyle =
+      params.outline === "rock" ? hsl(c.hue, c.sat, c.light + OUTLINE_GAP) : "#F29F38";
+    ctx.stroke();
+  }
+
+  const hairlineFor = (c, l) =>
+    params.outline === "facets" ? hsl(c.hue, clamp(c.sat - 20, 0, 100), l + 14, 0.75) : null;
+
+  // ---------------------------------------------------------------- variant renderers
+
+  function drawFlat(ctx, rock, c) {
+    const v = ngon(rock.radius, rock.sides);
+    trace(ctx, v);
+    ctx.fillStyle = hsl(c.hue, c.sat, c.light);
+    ctx.fill();
+    outlineRock(ctx, v, rock, c);
+  }
+
+  function shadeAt(rock, c, angle) {
+    return c.light + Math.cos(angle - rock.lightAngle) * params.shadeAmp;
+  }
+
+  function drawFan(ctx, rock, c) {
+    const v = ngon(rock.radius, rock.sides);
+    const mag = rock.radius * (params.apexOffset / 100) * rock.apexMag;
+    const apex = [Math.cos(rock.apexAngle) * mag, Math.sin(rock.apexAngle) * mag];
+
+    for (let i = 0; i < v.length; i++) {
+      const a = v[i];
+      const b = v[(i + 1) % v.length];
+      const cx = (a[0] + b[0] + apex[0]) / 3;
+      const cy = (a[1] + b[1] + apex[1]) / 3;
+      const l = shadeAt(rock, c, Math.atan2(cy, cx));
+      facet(ctx, [apex, a, b], hsl(c.hue, c.sat, l), hairlineFor(c, l));
+    }
+
+    outlineRock(ctx, v, rock, c);
+  }
+
+  function drawRings(ctx, rock, c) {
+    const n = rock.sides;
+    const step = (Math.PI * 2) / n;
+    const outer = ngon(rock.radius, n);
+    const inner = ngon(rock.radius * (params.innerScale / 100), n, step / 2);
+
+    const faces = [];
+    for (let i = 0; i < n; i++) {
+      const j = (i + 1) % n;
+      faces.push([outer[i], outer[j], inner[i]]);
+      faces.push([outer[j], inner[j], inner[i]]);
+    }
+    faces.push(inner);
+
+    for (const face of faces) {
+      let cx = 0;
+      let cy = 0;
+      for (const [x, y] of face) {
+        cx += x / face.length;
+        cy += y / face.length;
+      }
+      const l = shadeAt(rock, c, Math.atan2(cy, cx));
+      facet(ctx, face, hsl(c.hue, c.sat, l), hairlineFor(c, l));
+    }
+
+    outlineRock(ctx, outer, rock, c);
+  }
+
+  function drawCraters(ctx, rock, c) {
+    const v = ngon(rock.radius, rock.sides);
+    trace(ctx, v);
+    ctx.fillStyle = hsl(c.hue, c.sat, c.light);
+    ctx.fill();
+
+    for (let i = 0; i < params.craterCount; i++) {
+      const cr = rock.craters[i];
+      if (!cr) break;
+      const d = cr.d * rock.radius * 0.5;
+      const cx = Math.cos(cr.a) * d;
+      const cy = Math.sin(cr.a) * d;
+      const r = rock.radius * (0.1 + cr.r * 0.16);
+      const cv = ngon(r, cr.sides, cr.rot).map(([x, y]) => [x + cx, y + cy]);
+
+      trace(ctx, cv);
+      ctx.fillStyle = hsl(c.hue, c.sat, c.light - params.craterDepth);
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = hsl(c.hue, c.sat, c.light + params.craterDepth * 0.5, 0.65);
+      ctx.stroke();
+    }
+
+    outlineRock(ctx, v, rock, c);
+  }
+
+  function drawRough(ctx, rock, c) {
+    const v = ngon(rock.radius, rock.sides, 0, rock.jitter, params.roughness / 100);
+    trace(ctx, v);
+    ctx.fillStyle = hsl(c.hue, c.sat, c.light);
+    ctx.fill();
+    outlineRock(ctx, v, rock, c);
+  }
+
+  // ---------------------------------------------------------------- overlay
+
+  function drawCollisionOverlay(ctx, rock) {
+    // What collisions.js measures today: the regular n-gon, inflated by half the stroke.
+    const pad = SIZES[rock.size].stroke / 2;
+    const v = ngon(rock.radius + pad, rock.sides);
+    trace(ctx, v);
+    ctx.setLineDash([5, 5]);
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = SHOT;
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // ---------------------------------------------------------------- ship
+
+  function drawShip(ctx, x, y, angle) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    trace(ctx, HULL);
+    ctx.fillStyle = SHIP_FILL;
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = SHIP_STROKE;
+    ctx.stroke();
+    ctx.restore();
+
+    // shot.js: a magenta point at strokeWeight 8, 15px per frame down the nose
+    ctx.fillStyle = SHOT;
+    for (let i = 1; i <= 3; i++) {
+      const d = 46 + i * 34;
+      ctx.beginPath();
+      ctx.arc(x + Math.cos(angle) * d, y + Math.sin(angle) * d, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // ---------------------------------------------------------------- canvases
+
+  function fitCanvas(canvas, height) {
+    const dpr = window.devicePixelRatio || 1;
+    const width = canvas.parentElement.clientWidth;
+    canvas.style.height = height + "px";
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { ctx, width, height };
+  }
+
+  const specimenCanvas = document.getElementById("specimens");
+  const fieldCanvas = document.getElementById("field");
+  let specimenBox = null;
+  let fieldBox = null;
+
+  function paintGround(ctx, w, h, stars) {
+    ctx.fillStyle = GROUND;
+    ctx.fillRect(0, 0, w, h);
+    if (!stars) return;
+    const rng = mulberry32(0x5eed);
+    ctx.fillStyle = STAR;
+    // stars.js: 500 points at strokeWeight 3, scaled here to this canvas's area
+    const count = Math.round((w * h) / 2600);
+    for (let i = 0; i < count; i++) {
+      ctx.fillRect(Math.round(rng() * w), Math.round(rng() * h), 3, 3);
+    }
+  }
+
+  function renderSpecimens() {
+    if (!specimenBox) return;
+    const { ctx, width, height } = specimenBox;
+    const variant = VARIANTS[variantIndex];
+    paintGround(ctx, width, height, false);
+
+    const slots = specimens.length;
+    specimens.forEach((rock, i) => {
+      const x = (width / slots) * (i + 0.5);
+      const y = height / 2;
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rock.angle);
+      variant.draw(ctx, rock, rockColor(rock));
+      if (params.showCollision) drawCollisionOverlay(ctx, rock);
+      ctx.restore();
+
+      ctx.font = '500 11px "IBM Plex Mono", monospace';
+      ctx.fillStyle = "#5C7893";
+      ctx.textAlign = "center";
+      ctx.fillText(
+        `${rock.size}  r ${rock.radius.toFixed(0)}px  ${rock.sides} sides  stroke ${SIZES[rock.size].stroke}`,
+        x,
+        height - 14
+      );
+    });
+  }
+
+  function renderField() {
+    if (!fieldBox) return;
+    const { ctx, width, height } = fieldBox;
+    const variant = VARIANTS[variantIndex];
+    paintGround(ctx, width, height, true);
+
+    for (const rock of rocks) {
+      ctx.save();
+      ctx.translate(rock.x, rock.y);
+      ctx.rotate(rock.angle);
+      variant.draw(ctx, rock, rockColor(rock));
+      if (params.showCollision) drawCollisionOverlay(ctx, rock);
+      ctx.restore();
+    }
+
+    if (params.showShip) drawShip(ctx, width / 2, height / 2, -Math.PI / 5);
+  }
+
+  function stepField() {
+    if (!fieldBox) return;
+    const { width, height } = fieldBox;
+    for (const rock of rocks) {
+      rock.angle += rock.spin;
+      rock.x += rock.vx;
+      rock.y += rock.vy;
+      if (rock.x > width + rock.radius) rock.x = -rock.radius;
+      if (rock.x < -rock.radius) rock.x = width + rock.radius;
+      if (rock.y > height + rock.radius) rock.y = -rock.radius;
+      if (rock.y < -rock.radius) rock.y = height + rock.radius;
+    }
+    for (const rock of specimens) rock.angle += rock.spin;
+  }
+
+  // ---------------------------------------------------------------- shape knobs
+
+  const shapeKnobs = document.getElementById("shapeKnobs");
+  const shapeAsks = document.getElementById("shapeAsks");
+
+  const SHAPE_ASKS = {
+    A: "Nothing to tune. This is the control: one fill, one stroke, exactly what ships today.",
+    B: "Settles: how far off centre the fan apex sits. At 0 it is a pinwheel, and these rocks spin.",
+    C: "Settles: where the inner ring sits. Low values give a thin rim, high values a wide bevel.",
+    D: "Settles: how many pits and how deep they cut.",
+    E: "Settles: how far each vertex strays from the circle.",
+  };
+
+  function buildShapeKnobs() {
+    const variant = VARIANTS[variantIndex];
+    shapeAsks.textContent = SHAPE_ASKS[variant.key];
+    shapeKnobs.replaceChildren();
+
+    for (const knob of variant.knobs) {
+      const wrap = document.createElement("div");
+      wrap.className = "knob";
+      wrap.innerHTML =
+        '<div class="row"><label for="' +
+        knob.id +
+        '">' +
+        knob.label +
+        '</label><output id="' +
+        knob.id +
+        'Out"></output></div>' +
+        '<input type="range" id="' +
+        knob.id +
+        '" min="' +
+        knob.min +
+        '" max="' +
+        knob.max +
+        '" step="1">';
+      shapeKnobs.append(wrap);
+
+      const input = wrap.querySelector("input");
+      const out = wrap.querySelector("output");
+      input.value = params[knob.id];
+      out.textContent = params[knob.id] + " " + knob.unit;
+      input.addEventListener("input", () => {
+        params[knob.id] = Number(input.value);
+        out.textContent = input.value + " " + knob.unit;
+        refresh();
+      });
+    }
+  }
+
+  // ---------------------------------------------------------------- wiring
+
+  const UNITS = {
+    baseHue: "deg",
+    hueJitter: "+/- deg",
+    saturation: "%",
+    shadeAmp: "+/- lightness",
+    lightStep: "lightness",
+    level: "",
+  };
+
+  function bindRange(id) {
+    const input = document.getElementById(id);
+    const out = document.getElementById(id + "Out");
+    const write = () => {
+      out.textContent = (UNITS[id] ? input.value + " " + UNITS[id] : input.value).trim();
+    };
+    input.value = params[id];
+    write();
+    input.addEventListener("input", () => {
+      params[id] = Number(input.value);
+      write();
+      if (id === "level") rebuild();
+      else refresh();
+    });
+  }
+
+  function bindCheck(id) {
+    const input = document.getElementById(id);
+    input.checked = params[id];
+    input.addEventListener("change", () => {
+      params[id] = input.checked;
+      refresh();
+    });
+  }
+
+  ["baseHue", "hueJitter", "saturation", "shadeAmp", "lightStep", "level"].forEach(bindRange);
+  ["sizeLightness", "showShip", "animate", "showCollision"].forEach(bindCheck);
+
+  const outlineSelect = document.getElementById("outline");
+  outlineSelect.value = params.outline;
+  outlineSelect.addEventListener("change", () => {
+    params.outline = outlineSelect.value;
+    refresh();
+  });
+
+  document.getElementById("reseed").addEventListener("click", () => {
+    seed = (Math.random() * 0xffffffff) >>> 0;
+    rebuild();
+  });
+
+  // ---------------------------------------------------------------- variant switching
+
+  const warningBox = document.getElementById("warning");
+  const readout = document.getElementById("readout");
+  const fieldNote = document.getElementById("fieldNote");
+
+  function setVariant(index, push) {
+    variantIndex = (index + VARIANTS.length) % VARIANTS.length;
+    const variant = VARIANTS[variantIndex];
+
+    document.getElementById("variantKey").textContent = "Variant " + variant.key;
+    document.getElementById("variantName").textContent = variant.name;
+
+    if (variant.warning) {
+      warningBox.innerHTML = variant.warning;
+      warningBox.hidden = false;
+    } else {
+      warningBox.hidden = true;
+    }
+
+    if (push) {
+      const url = new URL(window.location.href);
+      url.searchParams.set("variant", variant.key);
+      history.replaceState(null, "", url);
+    }
+
+    buildShapeKnobs();
+    refresh();
+  }
+
+  document.getElementById("prev").addEventListener("click", () => setVariant(variantIndex - 1, true));
+  document.getElementById("next").addEventListener("click", () => setVariant(variantIndex + 1, true));
+
+  window.addEventListener("keydown", (event) => {
+    const tag = (event.target.tagName || "").toLowerCase();
+    if (tag === "input" || tag === "select" || tag === "textarea" || event.target.isContentEditable) return;
+    if (event.key === "ArrowLeft") setVariant(variantIndex - 1, true);
+    if (event.key === "ArrowRight") setVariant(variantIndex + 1, true);
+  });
+
+  // ---------------------------------------------------------------- readout
+
+  function writeReadout() {
+    const variant = VARIANTS[variantIndex];
+    const lines = [
+      `variant      ${variant.key}  ${variant.name}`,
+      `baseHue      ${params.baseHue} deg`,
+      `hueJitter    +/- ${params.hueJitter} deg`,
+      `saturation   ${params.saturation} %`,
+      `shadeAmp     +/- ${params.shadeAmp} lightness`,
+      `sizeLight    ${params.sizeLightness ? "on, " + params.lightStep + " per size" : "off"}`,
+      `outline      ${outlineSelect.selectedOptions[0].textContent}`,
+    ];
+    for (const knob of variant.knobs) {
+      lines.push(`${knob.id.padEnd(12)} ${params[knob.id]} ${knob.unit}`);
+    }
+    lines.push(`seed         ${seed}`);
+    readout.innerHTML = lines
+      .map((line) => line.replace(/^(\S+)(\s+)/, "<b>$1</b>$2"))
+      .join("\n");
+  }
+
+  // ---------------------------------------------------------------- loop
+
+  function refresh() {
+    renderSpecimens();
+    renderField();
+    writeReadout();
+    const count = rocks.length;
+    fieldNote.textContent = `Level ${params.level}: ${params.level * 2} large rocks spawned, ${count} on screen mid-level.`;
+  }
+
+  function rebuild() {
+    const height = Math.max(340, Math.min(560, Math.round(window.innerHeight * 0.52)));
+    specimenBox = fitCanvas(specimenCanvas, 240);
+    fieldBox = fitCanvas(fieldCanvas, height);
+    rocks = buildField(fieldBox.width, fieldBox.height);
+    specimens = buildSpecimens();
+    refresh();
+  }
+
+  let last = 0;
+  function tick(now) {
+    if (params.animate && now - last > 16) {
+      last = now;
+      stepField();
+      renderSpecimens();
+      renderField();
+    }
+    requestAnimationFrame(tick);
+  }
+
+  let resizeTimer = null;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(rebuild, 150);
+  });
+
+  const requested = new URL(window.location.href).searchParams.get("variant");
+  const startIndex = Math.max(0, VARIANTS.findIndex((v) => v.key === requested));
+
+  rebuild();
+  setVariant(startIndex, false);
+  requestAnimationFrame(tick);
+</script>
