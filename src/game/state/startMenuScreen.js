@@ -1,3 +1,7 @@
+import VolumeControl from "./volumeControl";
+
+export const CONTROLS_TEXT = "Controls: ASWD/ARROWS to move & ENTER/SPACE to shoot";
+
 export class StartMenuScreen {
   constructor(p5, game) {
     this.p5 = p5;
@@ -16,12 +20,13 @@ export class StartMenuScreen {
       spacing: 21,
     };
     this.level = { text: `LEVEL `, position: { x: 0, y: 0 } };
+    this.volume = { control: new VolumeControl(p5, game), y: 52 };
     this.start = {
       text: "PRESS ENTER/SPACE TO START",
       position: { x: 0, y: 100 },
     };
     this.controls = {
-      text: "Controls: ASWD/ARROWS to move & ENTER/SPACE to shoot",
+      text: CONTROLS_TEXT,
       position: { x: 0, y: 200 },
     };
     this.color = "#AFE4FF";
@@ -55,6 +60,8 @@ export class StartMenuScreen {
       this.controls.position.x,
       this.controls.position.y
     );
+
+    this.volume?.control.draw(this.volume.y);
 
     p5.pop();
   }
@@ -93,6 +100,7 @@ export class StartMenuScreen {
 
   draw() {
     this._render();
+    this.volume?.control.update();
     if (this.game.input.wasPressed("confirm")) this._onConfirm();
   }
 }
@@ -103,6 +111,7 @@ export class LevelUpScreen extends StartMenuScreen {
     this.controls = { text: "", position: { x: 0, y: 0 } };
     // The screen between waves stays about the wave.
     this.scores = null;
+    this.volume = null;
   }
 
   _onConfirm() {

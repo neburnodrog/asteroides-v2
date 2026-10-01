@@ -65,6 +65,7 @@ export default class SoundManager {
     // headless browser can give, since it never resumes the audio context.
     this.lastPlay = {};
     this.playCount = {};
+    this.outputLevel = 1;
   }
 
   // Every cue the game plays is registered here. Sampled cues load from a file, the three the
@@ -111,6 +112,12 @@ export default class SoundManager {
     cue.play(params);
     this.lastPlay[name] = params;
     this.playCount[name] = (this.playCount[name] ?? 0) + 1;
+  }
+
+  // p5.sound's one output gain, which every cue reaches the speakers through.
+  setOutputLevel(level) {
+    this.outputLevel = level;
+    this.p5.outputVolume(level);
   }
 
   stop(name) {

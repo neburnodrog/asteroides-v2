@@ -5,6 +5,8 @@ const KEY_MAP = {
   rotateRight: [68, 39],
   shoot: [32, 13],
   confirm: [32, 13],
+  volumeDown: [65, 37],
+  volumeUp: [68, 39],
 };
 
 const ACTIONS_BY_KEY = {};
@@ -31,6 +33,12 @@ export default class Input {
   isHeld(action) {
     const codes = KEY_MAP[action];
     return codes ? codes.some((c) => this.p5.keyIsDown(c)) : false;
+  }
+
+  // Drops every press nobody read. A screen calls this as it takes over, so a press made on the
+  // last one, a D held to steer, say, cannot land as a volume change on this one.
+  flush() {
+    this._pending.clear();
   }
 
   wasPressed(action) {

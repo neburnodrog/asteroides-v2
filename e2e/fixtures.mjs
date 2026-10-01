@@ -33,6 +33,10 @@ const VERBS = [
   "lastCuePlay",
   "cuePlayCounts",
   "pinSoundRandom",
+  "volumeStep",
+  "setVolume",
+  "outputLevel",
+  "corruptVolumeStorage",
 ];
 
 export const test = base.extend({

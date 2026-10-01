@@ -9,11 +9,12 @@
 // time. Nothing in a spec should wait and hope.
 
 import { STORAGE_KEY } from "./highScores.js";
+import { STORAGE_KEY as VOLUME_KEY } from "./volume.js";
 import { NOSE_REACH } from "./geometry.js";
 import { setHitboxes } from "./debugDraw.js";
 import { variationRange } from "./soundManager.js";
 
-export function attachHarness({ p5, run, highScores, getGame }) {
+export function attachHarness({ p5, run, highScores, volume, getGame }) {
   const game = () => getGame();
 
   // Reported as a boolean rather than two floats, so a spec asserts the ship came back where it
@@ -136,6 +137,25 @@ export function attachHarness({ p5, run, highScores, getGame }) {
     // A hand edited value. The key comes from the module, so a spec names no storage detail.
     corruptStorage() {
       window.localStorage.setItem(STORAGE_KEY, "{ not json");
+    },
+
+    /** ARRANGING THE VOLUME */
+    volumeStep() {
+      return volume.get();
+    },
+
+    // Through the module's own set, the door the volume control uses, so the output level follows.
+    setVolume(step) {
+      volume.set(step);
+    },
+
+    // The level SoundManager last handed p5.sound's output gain.
+    outputLevel() {
+      return game().soundManager.outputLevel;
+    },
+
+    corruptVolumeStorage() {
+      window.localStorage.setItem(VOLUME_KEY, "{ not json");
     },
 
     /** ARRANGING THE FIELD */

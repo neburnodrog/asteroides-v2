@@ -86,6 +86,7 @@ Defined by `KEY_MAP` in `src/game/input.js`. Change them there, not here.
 - Rotate right: `D` or right arrow
 - Shoot: space or enter
 - Confirm (start menu, level-up, game-over restart): space or enter
+- Volume down / up (start menu): `A` or left arrow / `D` or right arrow
 
 ## Agent skills
 

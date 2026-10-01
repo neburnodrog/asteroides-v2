@@ -17,12 +17,16 @@ const ASTEROID_HITS = {
 };
 
 export default class Game {
-  constructor(p5, soundManager, input, run, highScores, current, images) {
+  constructor(p5, { soundManager, input, run, highScores, volume }, current, images) {
     this.p5 = p5;
     this.soundManager = soundManager;
     this.input = input;
     this.run = run;
     this.highScores = highScores;
+    this.volume = volume;
+
+    // Input outlives every Game, and a press the last one never read belongs to it.
+    input.flush();
 
     this.state = new GameState({ current });
     // Where the run that ended on this Game landed in the high score table, or null. A death is
