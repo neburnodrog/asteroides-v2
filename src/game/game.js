@@ -1,6 +1,7 @@
 /** STATES */
 import GameOverScreen from "./state/gameOverScreen";
 import { StartMenuScreen, LevelUpScreen } from "./state/startMenuScreen";
+import PauseScreen from "./state/pauseScreen";
 import GameState from "./gameState";
 import { shipVsAsteroids, shotsVsAsteroids, GHOST_CLEARANCE } from "./collisions";
 import { drawHitboxes } from "./debugDraw";
@@ -37,6 +38,7 @@ export default class Game {
     this.gameOverScreen = new GameOverScreen(p5, this);
     this.startMenuScreen = new StartMenuScreen(p5, this);
     this.levelUpScreen = new LevelUpScreen(p5, this);
+    this.pauseScreen = new PauseScreen(p5, this);
     this.scoreboard = new Scoreboard(p5, images.heart);
 
     /** GAME ELEMENTS */
@@ -145,6 +147,26 @@ export default class Game {
     this.killShip();
   }
 
+  // Entered by a key or by the window losing focus, and a no-op wherever a pause is not legal.
+  // Thrust is the one cue that would sound on through a pause. The flush drops any press made
+  // during play that nothing has read yet, so it cannot land on the pause screen.
+  pause() {
+    this.state.pause();
+    if (!this.state.isPaused()) return;
+
+    this.ship.stopThrust();
+    this.input.flush();
+  }
+
+  // Thrust comes back on the next step only if the key is still down, through the ship's own
+  // check. The flush keeps a press made on the pause screen from firing in play.
+  resume() {
+    if (!this.state.isPaused()) return;
+
+    this.state.resume();
+    this.input.flush();
+  }
+
   // DRAW
   playGame() {
     this.p5.frameRate(60);
@@ -179,6 +201,13 @@ export default class Game {
   }
 
   draw() {
+    // Read on every screen, legal or not, so a press made on the menu cannot pause the first
+    // frame of play.
+    if (this.input.wasPressed("pause")) {
+      if (this.state.isPaused()) this.resume();
+      else this.pause();
+    }
+
     switch (this.state.current) {
       case "menu":
         this.startMenuScreen.draw();
@@ -187,6 +216,9 @@ export default class Game {
       case "dying":
       case "ghost":
         this.playGame();
+        break;
+      case "paused":
+        this.pauseScreen.draw();
         break;
       case "levelComplete":
         // The screen takes the draw away from playGame, so the ship is no longer stepped and

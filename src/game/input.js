@@ -7,6 +7,7 @@ const KEY_MAP = {
   confirm: [32, 13],
   volumeDown: [65, 37],
   volumeUp: [68, 39],
+  pause: [27, 80],
 };
 
 const ACTIONS_BY_KEY = {};

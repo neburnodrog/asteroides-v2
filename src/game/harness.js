@@ -14,7 +14,7 @@ import { NOSE_REACH } from "./geometry.js";
 import { setHitboxes } from "./debugDraw.js";
 import { variationRange } from "./soundManager.js";
 
-export function attachHarness({ p5, run, highScores, volume, getGame }) {
+export function attachHarness({ p5, run, highScores, volume, autoPause, getGame }) {
   const game = () => getGame();
 
   // Reported as a boolean rather than two floats, so a spec asserts the ship came back where it
@@ -52,6 +52,21 @@ export function attachHarness({ p5, run, highScores, volume, getGame }) {
       game().state.absenceFrames = frames;
     },
 
+    /** PAUSING */
+    pauseGame() {
+      game().pause();
+    },
+
+    resumeGame() {
+      game().resume();
+    },
+
+    // The path a blur or a hidden tab takes. The real listeners ignore both while the harness is
+    // attached, so this is the only way a spec reaches it.
+    autoPause() {
+      autoPause();
+    },
+
     /** READING */
     snapshot() {
       const g = game();
@@ -81,6 +96,25 @@ export function attachHarness({ p5, run, highScores, volume, getGame }) {
         // The one float in here. A death keeps the heading, so a spec asserts this is the same
         // number either side of one rather than asserting any particular angle.
         shipHeading: g.ship.angleOfShip,
+      };
+    },
+
+    // Everything on the canvas that moves or fades, for a spec to compare two readings of. Never
+    // assert a value from it.
+    positions() {
+      const g = game();
+      const at = ({ position }) => ({ x: position.x, y: position.y });
+      const faded = (item) => ({ ...at(item), alpha: item.color?.stroke?.A ?? item.alpha });
+
+      return {
+        ship: { ...at(g.ship), heading: g.ship.angleOfShip },
+        asteroids: g.asteroids.array.map((asteroid) => ({
+          ...at(asteroid),
+          angle: asteroid.rotation.angle,
+        })),
+        shots: g.ship.shots.map(at),
+        debris: [...g.asteroids.asteroidDebris, ...g.ship.shipDebris].map(faded),
+        traces: g.ship.traces.map(faded),
       };
     },
 

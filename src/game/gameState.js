@@ -15,6 +15,8 @@ const BLINK_INTERVAL_START = 20;
 const BLINK_INTERVAL_END = 4;
 const GHOST_OPACITY_START = 0.25;
 
+const PAUSABLE = ["playing", "dying", "ghost"];
+
 export default class GameState {
   constructor({ current = "menu", absenceFrames = ABSENCE_FRAMES } = {}) {
     this.current = current;
@@ -30,6 +32,30 @@ export default class GameState {
     this.ghostFrames = 0;
     this.ghostLength = 0;
     this.blinkPhase = 0;
+    // Which of PAUSABLE a pause came from, or null while not paused. Nothing else is saved,
+    // because nothing else changes while paused: the death counters only move in advanceDeath.
+    this.pausedFrom = null;
+  }
+
+  pause() {
+    if (!PAUSABLE.includes(this.current)) return;
+    this.pausedFrom = this.current;
+    this.current = "paused";
+  }
+
+  resume() {
+    if (this.current !== "paused") return;
+    this.current = this.pausedFrom;
+    this.pausedFrom = null;
+  }
+
+  isPaused() {
+    return this.current === "paused";
+  }
+
+  // A paused ghost is still drawn as the ghost it was.
+  showsGhost() {
+    return this.current === "ghost" || this.pausedFrom === "ghost";
   }
 
   startPlaying() {
@@ -104,7 +130,7 @@ export default class GameState {
   // is what leaves the fade below full opacity for the whole of a grace extension, which is the
   // requirement the endpoints give way to.
   ghostProgress() {
-    if (this.current !== "ghost") return 1;
+    if (!this.showsGhost()) return 1;
     return Math.min(this.ghostFrames, this.ghostWindow - 1) / this.ghostWindow;
   }
 
@@ -119,7 +145,7 @@ export default class GameState {
   // The ghost's opacity as a fraction of full, or null on the frames the blink is dark. 1
   // whenever there is no ghost, so a caller renders the ship normally without asking twice.
   ghostAlpha() {
-    if (this.current !== "ghost") return 1;
+    if (!this.showsGhost()) return 1;
     if (Math.floor(this.blinkPhase) % 2 === 1) return null;
     return GHOST_OPACITY_START + (1 - GHOST_OPACITY_START) * this.ghostProgress();
   }

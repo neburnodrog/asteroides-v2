@@ -73,16 +73,16 @@ export default class AsteroidDebris {
     }
 
 
-    draw() {
-        const p5 = this.p5;
-
-        /** CALCULATIONS */
+    step() {
         this.calcPosition();
         this.calcRotation();
         this.calcColor();
         this.calcVelocity();
+    }
 
-        /** RENDER DEBRIS */
+    draw() {
+        const p5 = this.p5;
+
         p5.push();
 
         p5.translate(this.position.x, this.position.y);

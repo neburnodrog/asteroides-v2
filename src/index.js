@@ -36,6 +36,14 @@ const sketch = (p5) => {
     onChange: (level) => soundManager.setOutputLevel(level),
   });
   const lasting = { soundManager, input, run, highScores, volume };
+  // Set before the harness module resolves, so no blur in between can pause the game a test is
+  // about to arrange.
+  let harnessAttached = false;
+
+  const autoPause = () => game?.pause();
+  const onFocusLost = () => {
+    if (!harnessAttached) autoPause();
+  };
 
   const resetSketch = (current) => {
     game?.teardown();
@@ -49,8 +57,16 @@ const sketch = (p5) => {
     if (process.env.NODE_ENV !== "production") {
       if (!window.location.search.includes("e2e=1")) return;
 
+      harnessAttached = true;
       import("./game/harness.js").then(({ attachHarness }) => {
-        attachHarness({ p5, run, highScores, volume, getGame: () => game });
+        attachHarness({
+          p5,
+          run,
+          highScores,
+          volume,
+          autoPause,
+          getGame: () => game,
+        });
       });
     }
   };
@@ -70,6 +86,12 @@ const sketch = (p5) => {
     resetSketch("menu");
     p5.textFont(spaceQuest);
     attachTestHarnessIfAsked();
+
+    // Focus coming back does nothing, so the player resumes when ready.
+    window.addEventListener("blur", onFocusLost);
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) onFocusLost();
+    });
   };
 
   p5.draw = () => {

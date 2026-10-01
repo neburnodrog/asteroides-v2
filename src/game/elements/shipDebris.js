@@ -52,16 +52,16 @@ export default class ShipDebris {
         }
     }
 
-    draw() {
-        const p5 = this.p5;
-
-        // CALCULATIONS
+    step() {
         this.calcPosition();
         this.calcRotation();
         this.calcVelocity();
         this.calcColor();
+    }
 
-        // RENDERING
+    draw() {
+        const p5 = this.p5;
+
         p5.push();
 
         p5.translate(this.position.x, this.position.y);

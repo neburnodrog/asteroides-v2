@@ -57,13 +57,13 @@ export default class ShipTrace {
     }
 
 
+    step() {
+        this.calcColor();
+    }
+
     draw() {
         const p5 = this.p5;
 
-        /** CALCULATIONS */
-        this.calcColor();
-
-        /** RENDER DEBRIS */
         p5.push();
 
         p5.translate(this.position.x, this.position.y);

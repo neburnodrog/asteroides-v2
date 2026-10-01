@@ -218,17 +218,23 @@ export default class Ship {
     }
 
     this.shots.forEach((shot) => shot.step());
+    this.traces.forEach((trace) => trace.step());
+    this.shipDebris.forEach((debris) => debris.step());
   }
 
   draw() {
-    const { p5 } = this;
-
-    // CLEANUP
     this.filterOldShots();
     this.filterOldTraces();
     this.filterOldShipDebris();
 
-    // RENDERING
+    this.render();
+    if (!this.exploded) this.fireIfPressed();
+  }
+
+  // Draws the ship as it stands and changes nothing, which is all a paused frame may do.
+  render() {
+    const { p5 } = this;
+
     this.shots.forEach((shot) => shot.draw());
     this.traces.forEach((trace) => trace.draw());
 
@@ -246,8 +252,6 @@ export default class Ship {
         this.drawHull(alpha);
         p5.pop();
       }
-
-      this.fireIfPressed();
     }
   }
 }

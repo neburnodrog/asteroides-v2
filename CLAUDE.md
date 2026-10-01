@@ -55,7 +55,7 @@ one. The short version:
 - `src/index.js` — p5 instance bootstrap, asset preloading, global game state holder
 - `src/game/game.js` — central Game controller (one instance per level)
 - `src/game/elements/` — game entities (Ship, Asteroids, Shot, Debris) and visual elements (Background, Stars, Score, Life)
-- `src/game/state/` — screen state classes (StartMenuScreen, GameOverScreen, LevelUpScreen)
+- `src/game/state/` — screen state classes (StartMenuScreen, GameOverScreen, LevelUpScreen, PauseScreen) and the VolumeControl two of them share
 - `src/game/soundManager.js` — wraps p5.sound with reverb effects
 - `src/game/helpers.js` — viewport sizing, polygon drawing, vector utilities
 - `src/css/`, `src/font/`, `src/images/`, `src/sounds/` — assets
@@ -67,7 +67,7 @@ See **ARCHITECTURE.md** for the module map and game-loop invariants.
 - **A cleared level, a game over and a return to the menu reconstruct the Game**. `resetSketch()` in `index.js` builds a new `Game` around the long-lived `Run`, which carries the score, the lives and the level across. Do not try to "soft reset" those three paths by mutation, follow the reconstruction pattern. A death is the exception: it keeps the surviving asteroids, so it rebuilds only the ship, in place. See the invariants in ARCHITECTURE.md.
 - **Arrow keys and space are blocked at the document level** (`window.top.document.onkeydown` in `index.js`) to prevent page scroll. If you change input handling, preserve this guard or shooting/movement will scroll the page.
 - **`p5.windowResized` rebuilds the Background**. Any class that caches canvas dimensions must also rebuild on resize, or it will desync after a window resize.
-- **Movement lives in `step()`, `draw()` only renders.** `playGame()` steps every asteroid and the ship before any check measures, so the collision test reads the frame it is about to draw. Do not advance a colliding entity's position from `draw()`. Debris and traces are the exception.
+- **Movement lives in `step()`, `draw()` only renders.** `playGame()` steps every asteroid and the ship before any check measures, so the collision test reads the frame it is about to draw. Do not advance anything from `draw()`, debris and traces included: the pause screen renders the field without stepping it.
 - **Class-based state is mutated in `draw()` each frame** (60fps). Allocating new objects inside `draw()` (especially Vector instances) creates GC pressure — reuse instances when possible.
 
 ## Workflow
@@ -86,7 +86,8 @@ Defined by `KEY_MAP` in `src/game/input.js`. Change them there, not here.
 - Rotate right: `D` or right arrow
 - Shoot: space or enter
 - Confirm (start menu, level-up, game-over restart): space or enter
-- Volume down / up (start menu): `A` or left arrow / `D` or right arrow
+- Volume down / up (start menu, pause screen): `A` or left arrow / `D` or right arrow
+- Pause and resume: Escape or `P`. Confirm also resumes.
 
 ## Agent skills
 

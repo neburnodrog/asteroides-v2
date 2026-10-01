@@ -76,11 +76,15 @@ export default class Asteroids {
 
     step() {
         this.array.forEach(asteroid => asteroid.step());
+        this.asteroidDebris.forEach(debris => debris.step());
     }
 
     draw() {
         this.asteroidDebris = this.asteroidDebris.filter(debris => !debris.faded);
+        this.render();
+    }
 
+    render() {
         this.array.forEach(asteroid => asteroid.draw());
         this.asteroidDebris.forEach(debris => debris.draw());
     }

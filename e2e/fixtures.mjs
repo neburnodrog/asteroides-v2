@@ -37,6 +37,10 @@ const VERBS = [
   "setVolume",
   "outputLevel",
   "corruptVolumeStorage",
+  "pauseGame",
+  "resumeGame",
+  "autoPause",
+  "positions",
 ];
 
 export const test = base.extend({
