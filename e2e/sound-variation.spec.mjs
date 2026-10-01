@@ -88,7 +88,7 @@ test.describe("cue variation", () => {
       asteroides: a,
     }) => {
       await a.startRun();
-      await a.putAsteroidInFrontOfShip({ size, distance: 120 });
+      await a.putAsteroidInFrontOfShip({ size, gapFromNose: 40 });
 
       await a.press("Space");
       await a.step(20);
