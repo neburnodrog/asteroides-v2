@@ -1,6 +1,7 @@
 // Cues the game plays that have no audio file behind them. Each one owns its p5.sound graph and
-// exposes the play/stop pair a p5.SoundFile does, so SoundManager keys them in the same map and
-// neither of its methods learns which kind of cue it is holding.
+// answers the play({ rate, level }) and stop() a sampled cue does, so SoundManager keys them in
+// the same map and neither of its methods learns which kind of cue it is holding. `rate` scales
+// every frequency the cue plays and `level` is a fraction of its own amplitude.
 //
 // Nothing builds or starts a source until the first play(). A browser holds the audio context
 // suspended until a user gesture, and a source started before then stays silent for the life of
@@ -10,12 +11,14 @@
 // Three square-wave notes, a C major triad walked upwards.
 const LEVEL_UP_NOTES = [523.25, 659.25, 783.99];
 const LEVEL_UP_NOTE_SPACING = 0.09;
+const LEVEL_UP_PEAK = 0.4;
 
 const GAME_OVER_FROM = 330;
 const GAME_OVER_TO = 55;
 const GAME_OVER_SWEEP = 0.9;
 const GAME_OVER_HOLD = 0.55;
 const GAME_OVER_RELEASE = 0.35;
+const GAME_OVER_PEAK = 0.5;
 
 const THRUST_CUTOFF = 620;
 const THRUST_RESONANCE = 4;
@@ -84,7 +87,6 @@ class LevelUpCue extends OneShotCue {
     const osc = new this.sound.Oscillator(LEVEL_UP_NOTES[0], "square");
     const env = new this.sound.Envelope();
     env.setADSR(0.005, 0.07, 0, 0.02);
-    env.setRange(0.4, 0);
 
     osc.amp(0);
     if (this.reverb) this.reverb.process(osc);
@@ -92,13 +94,14 @@ class LevelUpCue extends OneShotCue {
     return { osc, env };
   }
 
-  play() {
+  play({ rate = 1, level = 1 } = {}) {
     const { osc, env } = this.build();
+    env.setRange(LEVEL_UP_PEAK * level, 0);
 
     osc.start();
     LEVEL_UP_NOTES.forEach((note, i) => {
       const at = i * LEVEL_UP_NOTE_SPACING;
-      osc.freq(note, 0, at);
+      osc.freq(note * rate, 0, at);
       env.play(osc, at, 0);
     });
 
@@ -111,7 +114,6 @@ class GameOverCue extends OneShotCue {
     const osc = new this.sound.Oscillator(GAME_OVER_FROM, "sawtooth");
     const env = new this.sound.Envelope();
     env.setADSR(0.01, 0.2, 0.6, GAME_OVER_RELEASE);
-    env.setRange(0.5, 0);
 
     osc.amp(0);
     if (this.reverb) this.reverb.process(osc);
@@ -119,12 +121,13 @@ class GameOverCue extends OneShotCue {
     return { osc, env };
   }
 
-  play() {
+  play({ rate = 1, level = 1 } = {}) {
     const { osc, env } = this.build();
+    env.setRange(GAME_OVER_PEAK * level, 0);
 
     osc.start();
-    osc.freq(GAME_OVER_FROM);
-    osc.freq(GAME_OVER_TO, GAME_OVER_SWEEP);
+    osc.freq(GAME_OVER_FROM * rate);
+    osc.freq(GAME_OVER_TO * rate, GAME_OVER_SWEEP);
 
     // Not Envelope.play: it truncates its sustain argument with ~~, so any hold under a second
     // becomes zero and the release cuts the sweep off a quarter of the way down.
@@ -137,6 +140,7 @@ class GameOverCue extends OneShotCue {
 
 // Held for as long as thrust is held, so this is the one cue whose playing state is a fact about
 // the source rather than a countdown. It carries no reverb: a tail on a loop smears into itself.
+// Noise has no pitch, so the rate moves the filter cutoff instead, once per start.
 class ThrustCue extends SynthCue {
   constructor(p5, options) {
     super(p5, options);
@@ -149,20 +153,21 @@ class ThrustCue extends SynthCue {
     filterThrough(noise, filter, THRUST_CUTOFF, THRUST_RESONANCE);
     noise.amp(0);
 
-    return { noise };
+    return { noise, filter };
   }
 
   isPlaying() {
     return this.playing;
   }
 
-  play() {
+  play({ rate = 1, level = 1 } = {}) {
     if (this.playing) return;
-    const { noise } = this.build();
+    const { noise, filter } = this.build();
+    filter.freq(THRUST_CUTOFF * rate);
 
     noise.amp(0);
     noise.start();
-    noise.amp(THRUST_LEVEL, THRUST_FADE_IN);
+    noise.amp(THRUST_LEVEL * level, THRUST_FADE_IN);
     this.playing = true;
   }
 

@@ -38,7 +38,7 @@ Domain vocabulary lives in `CONTEXT.md`. There are no external services. The onl
 - **Hitbox overlay**: `src/game/debugDraw.js` — strokes what `collisions.js` measures, using `collisionReach` rather than a second opinion. Off unless the harness calls `setHitboxes`.
 - **Player entity**: `src/game/elements/ship.js` — physics integration, shot/trace/debris spawning, screen-wrap. Reads input via `this.game.input.isHeld(...)` / `wasPressed(...)`.
 - **Asteroid system**: `src/game/elements/asteroids.js` — spawns initial wave per `level`, handles splitting (`X` → `M` → `S`) on hit, owns the asteroid array.
-- **Sound dispatch**: `src/game/soundManager.js` — keys every cue by name, applies a shared reverb to explosion/break sounds. Five cues are `p5.SoundFile`s loaded from `src/sounds/`. The three with no file in the repository (`levelUp`, `gameOver`, `shipThrust`) are synthesized in `src/game/cues.js` and answer the same `play`/`stop` pair, so neither `SoundManager` method knows which kind it holds.
+- **Sound dispatch**: `src/game/soundManager.js` — keys every cue by name, applies a shared reverb to explosion/break sounds. Five cues are `p5.SoundFile`s loaded from `src/sounds/`, each wrapped in a `SampledCue`. The three with no file in the repository (`levelUp`, `gameOver`, `shipThrust`) are synthesized in `src/game/cues.js` and answer the same `play({ rate, level })`/`stop` pair, so neither `SoundManager` method knows which kind it holds. `SoundManager.play` draws each play's variation from the `VARIATION` table and a replaceable random source, and records the last rate and level per cue for the harness.
 
 ## Invariants
 

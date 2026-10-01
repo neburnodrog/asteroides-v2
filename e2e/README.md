@@ -66,8 +66,8 @@ generator.
 
 Audibility. A headless browser keeps the audio context suspended, so no spec can hear anything.
 What `sound.spec.mjs` does assert is the part the game controls: that every key the game plays is
-one `SoundManager` holds, and that the thrust loop is started and stopped on the paths that start
-and end thrust. The key-set assertion is the regression guard for #3, where three cues were played
+one `SoundManager` holds, that the thrust loop is started and stopped on the paths that start
+and end thrust, and the rate and level `SoundManager` handed each cue on its last play. The key-set assertion is the regression guard for #3, where three cues were played
 and never loaded and `SoundManager.play` no-opped in silence.
 
 Exact positions and velocities. `snapshot()` reports counts, states and a `shipMoving` boolean

@@ -11,6 +11,7 @@
 import { STORAGE_KEY } from "./highScores.js";
 import { NOSE_REACH } from "./geometry.js";
 import { setHitboxes } from "./debugDraw.js";
+import { variationRange } from "./soundManager.js";
 
 export function attachHarness({ p5, run, highScores, getGame }) {
   const game = () => getGame();
@@ -258,6 +259,26 @@ export function attachHarness({ p5, run, highScores, getGame }) {
 
     playCue(key) {
       game().soundManager.play(key);
+    },
+
+    cueVariation() {
+      return Object.fromEntries(
+        harness.soundCueKeys().map((key) => [key, variationRange(key)])
+      );
+    },
+
+    // The rate and level the cue was last handed, or undefined before its first play.
+    lastCuePlay(key) {
+      return game().soundManager.lastPlay[key];
+    },
+
+    cuePlayCounts() {
+      return { ...game().soundManager.playCount };
+    },
+
+    // Every draw from the variation's random source returns `value`, in [0, 1).
+    pinSoundRandom(value) {
+      game().soundManager.random = () => value;
     },
 
     explodeAllAsteroids() {

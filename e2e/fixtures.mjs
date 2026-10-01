@@ -29,6 +29,10 @@ const VERBS = [
   "soundCueKeys",
   "playingCues",
   "playCue",
+  "cueVariation",
+  "lastCuePlay",
+  "cuePlayCounts",
+  "pinSoundRandom",
 ];
 
 export const test = base.extend({
