@@ -55,6 +55,13 @@ and the ship comes back at its return point as a ghost. After a cleared level th
 starts fresh.
 _Avoid_: reset, restart, respawn. A reset ends the run and starts a new one.
 
+**Pause**
+A hold during play, a death included, entered with Escape or P or by the window losing focus.
+Nothing moves, debris and traces included, no frame of a death counts, and no cue sounds. Focus
+coming back does not resume. The pause screen offers resume, the volume and the
+controls. Resuming returns to exactly the moment the pause began. A pause is not a rebuild.
+_Avoid_: freeze, halt. An absence is not a pause.
+
 ### The record
 
 **High score table**
@@ -159,3 +166,21 @@ _Avoid_: margin, tolerance, fudge, padding
 The room a ghost wants around the ship before it becomes solid: 10px beyond the shapes touching.
 The one caller that measures overlap with anything other than contact.
 _Avoid_: grace radius, safe zone
+
+### Sound
+
+**Cue**
+One named sound the game plays, such as a shot or an `M` break. A cue is sampled from a file or
+synthesized, and nothing outside the sound code can tell which.
+_Avoid_: effect, sfx, clip
+
+**Variation**
+The small random change in pitch and loudness a cue gets each time it plays, so a repeated cue
+does not sound identical. A break stays on its size's file, and a larger size sits lower.
+_Avoid_: randomization, jitter as a name
+
+**Volume**
+The one level every cue plays under, set from the start menu or the pause screen, in ten steps
+from silent to full. The output level is the step squared, so loudness rises evenly. It defaults
+to step 8 and survives a reload.
+_Avoid_: master volume, gain, sound level
