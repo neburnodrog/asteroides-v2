@@ -1,4 +1,5 @@
 import VolumeControl from "./volumeControl";
+import { TEXT_COLOR } from "./palette";
 
 export const CONTROLS_TEXT = "Controls: ASWD/ARROWS to move & ENTER/SPACE to shoot";
 
@@ -29,7 +30,7 @@ export class StartMenuScreen {
       text: CONTROLS_TEXT,
       position: { x: 0, y: 200 },
     };
-    this.color = "#AFE4FF";
+    this.color = TEXT_COLOR;
   }
 
   _render() {

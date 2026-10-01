@@ -40,7 +40,8 @@ const VERBS = [
   "pauseGame",
   "resumeGame",
   "autoPause",
-  "positions",
+  "fieldState",
+  "seedVolume",
 ];
 
 export const test = base.extend({
@@ -80,6 +81,10 @@ export const test = base.extend({
       await page.keyboard.press(key);
       await api.step(frames);
     };
+
+    // A real window event, the kind the browser sends when the player switches away or back.
+    api.dispatchWindowEvent = (type) =>
+      page.evaluate((name) => window.dispatchEvent(new Event(name)), type);
 
     api.hold = async (key, frames) => {
       await page.keyboard.down(key);

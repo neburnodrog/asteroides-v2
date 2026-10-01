@@ -1,4 +1,6 @@
-const STEPS = 10;
+import { MAX_STEP } from "../volume";
+import { TEXT_COLOR } from "./palette";
+
 const BOX = 14;
 const GAP = 4;
 const LABEL_SIZE = 20;
@@ -11,7 +13,6 @@ export default class VolumeControl {
   constructor(p5, game) {
     this.p5 = p5;
     this.game = game;
-    this.color = "#AFE4FF";
   }
 
   // A press that cannot move the step, at either end, changes nothing and plays nothing. A move
@@ -23,7 +24,7 @@ export default class VolumeControl {
       (input.wasPressed("volumeDown") ? 1 : 0);
 
     if (delta !== 0 && volume.step(delta)) {
-      soundManager.play("shoot", { vary: false });
+      soundManager.preview("shoot");
     }
   }
 
@@ -37,13 +38,13 @@ export default class VolumeControl {
     p5.textSize(LABEL_SIZE);
     p5.textAlign(p5.RIGHT, p5.CENTER);
     p5.noStroke();
-    p5.fill(this.color);
+    p5.fill(TEXT_COLOR);
     p5.text("VOLUME", BAR_LEFT - 20, y);
 
-    p5.stroke(this.color);
+    p5.stroke(TEXT_COLOR);
     p5.strokeWeight(1);
-    for (let i = 0; i < STEPS; i++) {
-      if (i < step) p5.fill(this.color);
+    for (let i = 0; i < MAX_STEP; i++) {
+      if (i < step) p5.fill(TEXT_COLOR);
       else p5.noFill();
       p5.rect(BAR_LEFT + i * (BOX + GAP), y - BOX / 2, BOX, BOX);
     }

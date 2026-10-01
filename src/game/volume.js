@@ -5,9 +5,9 @@
 // Constructed once in index.js, so it outlives every Game.
 
 export const STORAGE_KEY = "asteroides.volume";
-const STORAGE_VERSION = 1;
+export const STORAGE_VERSION = 1;
+export const MAX_STEP = 10;
 const DEFAULT_STEP = 8;
-const MAX_STEP = 10;
 
 function isStep(value) {
   return Number.isInteger(value) && value >= 0 && value <= MAX_STEP;

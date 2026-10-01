@@ -87,6 +87,24 @@ test.describe("the volume on the start menu", () => {
     expect(await a.volumeStep()).toBe(8);
   });
 
+  test("a stored step out of range or of another version loads the default", async ({
+    asteroides: a,
+  }) => {
+    await a.seedVolume(3);
+    await a.reload();
+    expect(await a.volumeStep()).toBe(3);
+
+    for (const step of [11, -1, 2.5, "5"]) {
+      await a.seedVolume(step);
+      await a.reload();
+      expect(await a.volumeStep(), `stored ${step}`).toBe(8);
+    }
+
+    await a.seedVolume(3, { version: 99 });
+    await a.reload();
+    expect(await a.volumeStep()).toBe(8);
+  });
+
   test("a store that refuses writes keeps the step for the page", async ({
     asteroides: a,
   }) => {

@@ -1,9 +1,11 @@
+import { TEXT_COLOR } from './palette';
+
 export default class GameOverScreen {
     constructor(p5, game) {
         this.p5 = p5;
         this.game = game;
         this.textSize = 42;
-        this.color = "#AFE4FF";
+        this.color = TEXT_COLOR;
     }
 
     draw() {

@@ -1,16 +1,15 @@
 import VolumeControl from "./volumeControl";
 import { CONTROLS_TEXT } from "./startMenuScreen";
+import { TEXT_COLOR } from "./palette";
 
 const OVERLAY = [0, 0, 0, 170];
 
-// The frozen field under a dark overlay. It renders the entities without stepping them, so a
-// paused frame is a still, and leaves resuming by Escape or P to Game.draw.
+// The held field under a dark overlay. Resuming by Escape or P is left to Game.draw.
 export default class PauseScreen {
   constructor(p5, game) {
     this.p5 = p5;
     this.game = game;
     this.volumeControl = new VolumeControl(p5, game);
-    this.color = "#AFE4FF";
   }
 
   draw() {
@@ -29,7 +28,7 @@ export default class PauseScreen {
     p5.fill(...OVERLAY);
     p5.rect(0, 0, p5.width, p5.height);
 
-    p5.fill(this.color);
+    p5.fill(TEXT_COLOR);
     p5.textAlign(p5.CENTER, p5.CENTER);
     p5.translate(p5.width / 2, p5.height / 2);
 

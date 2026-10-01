@@ -55,10 +55,10 @@ for the harness, then freezes what comes back, because asserting that the high s
 survives is only worth anything across a real page load.
 
 Storage is arranged through verbs too. `setHighScores` fills the table through the same `record`
-call a finished run uses, `breakStorage` makes every write throw for the rest of the page the way
-a private window does, and `corruptStorage` writes a value the module cannot parse. The volume has `setVolume` and
-`corruptVolumeStorage` for the same jobs. A spec never
-names the storage key and never calls `localStorage` itself.
+call a finished run uses, `breakStorage` makes every write throw for the rest of the page the way a
+private window does, and `corruptStorage` writes a value the module cannot parse. The volume has
+`setVolume`, `seedVolume` and `corruptVolumeStorage` for the same jobs. A spec never names the
+storage key and never calls `localStorage` itself.
 
 ## What is deliberately not tested
 

@@ -1,6 +1,6 @@
 import { test, expect } from "./fixtures.mjs";
 
-// Covers the pause in CONTEXT.md. `positions()` reports floats, but a spec only ever compares two
+// Covers the pause in CONTEXT.md. `fieldState()` reports floats, but a spec only ever compares two
 // readings of it, never a coordinate.
 
 test.describe("pausing", () => {
@@ -23,10 +23,10 @@ test.describe("pausing", () => {
     await a.step();
 
     await a.pauseGame();
-    const before = await a.positions();
+    const before = await a.fieldState();
     await a.step(60);
 
-    expect(await a.positions()).toEqual(before);
+    expect(await a.fieldState()).toEqual(before);
   });
 
   test("a pause during the absence counts no frame of it", async ({
@@ -39,14 +39,14 @@ test.describe("pausing", () => {
 
     await a.pauseGame();
     const before = await a.snapshot();
-    const held = await a.positions();
+    const held = await a.fieldState();
     await a.step(200);
 
     expect(await a.snapshot()).toMatchObject({
       state: "paused",
       deathFrames: before.deathFrames,
     });
-    expect(await a.positions()).toEqual(held);
+    expect(await a.fieldState()).toEqual(held);
 
     await a.resumeGame();
     expect(await a.snapshot()).toMatchObject({
@@ -87,12 +87,12 @@ test.describe("pausing", () => {
     await a.step();
 
     await a.pauseGame();
-    const before = await a.positions();
+    const before = await a.fieldState();
     expect(before.debris.length).toBeGreaterThan(0);
     expect(before.traces.length).toBeGreaterThan(0);
 
     await a.step(60);
-    expect(await a.positions()).toEqual(before);
+    expect(await a.fieldState()).toEqual(before);
 
     await a.page.keyboard.up("w");
   });
@@ -150,6 +150,24 @@ test.describe("pausing", () => {
     expect(await a.playingCues()).not.toContain("shipThrust");
   });
 
+  test("nothing sounds under a pause, and a ringing break does not come back", async ({
+    asteroides: a,
+  }) => {
+    await a.startRun();
+    await a.parkAsteroids();
+    await a.playCue("shipExplosion");
+    await a.playCue("asteroidBreakM");
+    await a.playCue("levelUp");
+    expect((await a.playingCues()).length).toBeGreaterThan(0);
+
+    await a.press("p");
+    expect(await a.playingCues()).toEqual([]);
+
+    await a.press("p");
+    await a.step();
+    expect(await a.playingCues()).toEqual([]);
+  });
+
   test("confirm resumes without firing a shot", async ({ asteroides: a }) => {
     await a.startRun();
     await a.parkAsteroids();
@@ -170,7 +188,7 @@ test.describe("pausing", () => {
     await a.autoPause();
     expect((await a.snapshot()).state).toBe("paused");
 
-    await a.page.evaluate(() => window.dispatchEvent(new Event("focus")));
+    await a.dispatchWindowEvent("focus");
     await a.step(30);
     expect((await a.snapshot()).state).toBe("paused");
   });
@@ -180,7 +198,7 @@ test.describe("pausing", () => {
   }) => {
     await a.startRun();
 
-    await a.page.evaluate(() => window.dispatchEvent(new Event("blur")));
+    await a.dispatchWindowEvent("blur");
     await a.step();
 
     expect((await a.snapshot()).state).toBe("playing");

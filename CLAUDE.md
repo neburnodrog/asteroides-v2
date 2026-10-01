@@ -55,7 +55,7 @@ one. The short version:
 - `src/index.js` — p5 instance bootstrap, asset preloading, global game state holder
 - `src/game/game.js` — central Game controller (one instance per level)
 - `src/game/elements/` — game entities (Ship, Asteroids, Shot, Debris) and visual elements (Background, Stars, Score, Life)
-- `src/game/state/` — screen state classes (StartMenuScreen, GameOverScreen, LevelUpScreen, PauseScreen) and the VolumeControl two of them share
+- `src/game/state/`: screen state classes (StartMenuScreen, GameOverScreen, LevelUpScreen, PauseScreen) and the VolumeControl two of them share
 - `src/game/soundManager.js` — wraps p5.sound with reverb effects
 - `src/game/helpers.js` — viewport sizing, polygon drawing, vector utilities
 - `src/css/`, `src/font/`, `src/images/`, `src/sounds/` — assets

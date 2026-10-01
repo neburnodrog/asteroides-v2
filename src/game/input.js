@@ -36,8 +36,9 @@ export default class Input {
     return codes ? codes.some((c) => this.p5.keyIsDown(c)) : false;
   }
 
-  // Drops every press nobody read. A screen calls this as it takes over, so a press made on the
-  // last one, a D held to steer, say, cannot land as a volume change on this one.
+  // Drops every press nobody read. Called whenever a new screen takes over (a Game is built, a
+  // pause begins or ends), so a press made for the last screen, a D held to steer, say, cannot
+  // land as a volume change or a shot on this one.
   flush() {
     this._pending.clear();
   }

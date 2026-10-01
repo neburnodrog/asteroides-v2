@@ -26,7 +26,6 @@ export default class Game {
     this.highScores = highScores;
     this.volume = volume;
 
-    // Input outlives every Game, and a press the last one never read belongs to it.
     input.flush();
 
     this.state = new GameState({ current });
@@ -147,19 +146,17 @@ export default class Game {
     this.killShip();
   }
 
-  // Entered by a key or by the window losing focus, and a no-op wherever a pause is not legal.
-  // Thrust is the one cue that would sound on through a pause. The flush drops any press made
-  // during play that nothing has read yet, so it cannot land on the pause screen.
+  // Entered by a key or by the window losing focus. Nothing sounds under a pause, and a break
+  // still ringing is not resumed: only thrust comes back, on the next step, if the key is down.
   pause() {
     this.state.pause();
     if (!this.state.isPaused()) return;
 
     this.ship.stopThrust();
+    this.soundManager.stopAll();
     this.input.flush();
   }
 
-  // Thrust comes back on the next step only if the key is still down, through the ship's own
-  // check. The flush keeps a press made on the pause screen from firing in play.
   resume() {
     if (!this.state.isPaused()) return;
 

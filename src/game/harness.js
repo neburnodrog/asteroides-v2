@@ -9,7 +9,10 @@
 // time. Nothing in a spec should wait and hope.
 
 import { STORAGE_KEY } from "./highScores.js";
-import { STORAGE_KEY as VOLUME_KEY } from "./volume.js";
+import {
+  STORAGE_KEY as VOLUME_KEY,
+  STORAGE_VERSION as VOLUME_VERSION,
+} from "./volume.js";
 import { NOSE_REACH } from "./geometry.js";
 import { setHitboxes } from "./debugDraw.js";
 import { variationRange } from "./soundManager.js";
@@ -99,9 +102,9 @@ export function attachHarness({ p5, run, highScores, volume, autoPause, getGame 
       };
     },
 
-    // Everything on the canvas that moves or fades, for a spec to compare two readings of. Never
-    // assert a value from it.
-    positions() {
+    // Where everything on the canvas stands: position, heading or spin, and fade. Only for a
+    // spec to compare two readings of, never to assert a value from.
+    fieldState() {
       const g = game();
       const at = ({ position }) => ({ x: position.x, y: position.y });
       const faded = (item) => ({ ...at(item), alpha: item.color?.stroke?.A ?? item.alpha });
@@ -186,6 +189,12 @@ export function attachHarness({ p5, run, highScores, volume, autoPause, getGame 
     // The level SoundManager last handed p5.sound's output gain.
     outputLevel() {
       return game().soundManager.outputLevel;
+    },
+
+    // Writes the stored value directly, past the module's clamp, so a spec can hand the next
+    // page load a step or a version the module has to reject.
+    seedVolume(step, { version = VOLUME_VERSION } = {}) {
+      window.localStorage.setItem(VOLUME_KEY, JSON.stringify({ version, step }));
     },
 
     corruptVolumeStorage() {

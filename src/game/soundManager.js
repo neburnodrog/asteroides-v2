@@ -21,13 +21,23 @@ const VARIATION = {
 // Loudness as a fraction of the cue's own base level, the same on every cue.
 const LEVEL_FLOOR = 0.85;
 
-export function variationRange(name) {
+// Both draws are in [0, 1]. 0 gives the lowest rate and the floor level, 1 the highest and full.
+function variedPlay(name, pitchDraw, levelDraw) {
   const { rate, pitch } = VARIATION[name];
   return {
-    minRate: rate * (1 - pitch),
-    maxRate: rate * (1 + pitch),
-    minLevel: LEVEL_FLOOR,
-    maxLevel: 1,
+    rate: rate * (1 + (2 * pitchDraw - 1) * pitch),
+    level: LEVEL_FLOOR + levelDraw * (1 - LEVEL_FLOOR),
+  };
+}
+
+export function variationRange(name) {
+  const low = variedPlay(name, 0, 0);
+  const high = variedPlay(name, 1, 1);
+  return {
+    minRate: low.rate,
+    maxRate: high.rate,
+    minLevel: low.level,
+    maxLevel: high.level,
   };
 }
 
@@ -37,12 +47,21 @@ class SampledCue {
     this.file = file;
   }
 
-  // SoundFile.play(_, rate) retunes the source still sounding from the last play as well as the
-  // new one. A new source reads playbackRate when it is built, so setting the field instead
-  // leaves an overlapping shot at the pitch it started on.
+  // SoundFile.play's rate and amp arguments set state the file shares across every source it
+  // has started: the last source's playbackRate and the file's one output gain. Either would
+  // retune or re-level a shot still sounding from the last play. A new source reads
+  // playbackRate when it is built, so the field sets this play's pitch alone, and a gain of its
+  // own between the source and the file's output sets this play's level alone.
   play({ rate, level }) {
     this.file.playbackRate = rate;
-    this.file.play(0, undefined, level);
+    this.file.play();
+
+    const source = this.file.bufferSourceNode;
+    const gain = source.context.createGain();
+    gain.gain.value = level;
+    source.disconnect();
+    source.connect(gain);
+    gain.connect(this.file.output);
   }
 
   stop() {
@@ -91,23 +110,19 @@ export default class SoundManager {
     this.reverb.process(this.sounds.asteroidBreakL.file, 2, 2);
   }
 
-  vary(name) {
-    const { rate, pitch } = VARIATION[name];
-    return {
-      rate: rate * (1 + (2 * this.random() - 1) * pitch),
-      level: LEVEL_FLOOR + this.random() * (1 - LEVEL_FLOOR),
-    };
+  play(name) {
+    this.start(name, variedPlay(name, this.random(), this.random()));
   }
 
-  // `vary: false` plays the cue at its base rate and full level, for a preview whose whole point
-  // is that two plays in a row sound alike.
-  play(name, { vary = true } = {}) {
+  // At the cue's base rate and full level, so two previews in a row sound alike and the only
+  // difference the player hears is the volume.
+  preview(name) {
+    this.start(name, { rate: VARIATION[name].rate, level: 1 });
+  }
+
+  start(name, params) {
     const cue = this.sounds[name];
     if (!cue) return;
-
-    const params = vary
-      ? this.vary(name)
-      : { rate: VARIATION[name].rate, level: 1 };
 
     cue.play(params);
     this.lastPlay[name] = params;
@@ -122,5 +137,9 @@ export default class SoundManager {
 
   stop(name) {
     this.sounds[name]?.stop();
+  }
+
+  stopAll() {
+    Object.values(this.sounds).forEach((cue) => cue.stop());
   }
 }

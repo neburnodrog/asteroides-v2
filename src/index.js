@@ -35,7 +35,7 @@ const sketch = (p5) => {
   let volume = new Volume({
     onChange: (level) => soundManager.setOutputLevel(level),
   });
-  const lasting = { soundManager, input, run, highScores, volume };
+  const longLived = { soundManager, input, run, highScores, volume };
   // Set before the harness module resolves, so no blur in between can pause the game a test is
   // about to arrange.
   let harnessAttached = false;
@@ -47,7 +47,7 @@ const sketch = (p5) => {
 
   const resetSketch = (current) => {
     game?.teardown();
-    game = new Game(p5, lasting, current, { heart });
+    game = new Game(p5, longLived, current, { heart });
   };
 
   const attachTestHarnessIfAsked = () => {
