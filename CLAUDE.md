@@ -8,7 +8,7 @@ Browser-based Asteroids arcade game clone built with p5.js and bundled with Webp
 - Build (dev): `npm run build:dev`
 - Build (prod): `npm run build:prod`
 - Watch: `npm run watch`
-- Deploy: push to `main`. Vercel's git integration builds the commit and promotes it to production at https://asteroides-v2.vercel.app. `vercel.json` holds the build command and output directory. There is no deploy script.
+- Deploy: push to `main`. Vercel's git integration builds the commit and promotes it to production at https://asteroides.rubenkarlsson.com. The project has no `.vercel.app` production domain. `vercel.json` holds the build command and output directory. There is no deploy script.
 - E2E tests: `npm run test:e2e` (Playwright starts the dev server itself)
 - E2E tests, watch mode: `npm run test:e2e:ui`
 - Dev server without opening a browser: `npm run start:test`
