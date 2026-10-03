@@ -17,3 +17,4 @@ tasks/features .md
 
 # Claude Code worktrees
 .claude/worktrees/
+docs/superpowers/
