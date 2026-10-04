@@ -95,6 +95,16 @@ _Avoid_: boost, accelerate, forward
 Thrust against the ship's heading. It slows the ship and, held long enough, sends it backwards.
 _Avoid_: reverse, stop, decelerate
 
+**Strafe**
+Thrust at a right angle to the ship's heading, at half the strength of thrust. It moves the ship
+sideways without turning it, and it leaves no trace.
+_Avoid_: sidestep, lateral thrust, slide
+
+**Steer**
+The ship turning toward the mouse pointer at its normal turn rate, the short way round, until it
+faces the pointer. Turning with the keys overrides it until the pointer next moves.
+_Avoid_: aim, mouse look, point
+
 **Wrap**
 The ship or an asteroid leaving one edge of the canvas re-enters from the opposite edge. Shots
 do not wrap: a shot that leaves the canvas is gone.
@@ -142,6 +152,29 @@ _Avoid_: particle, fragment, shard
 The coloured puff left behind the ship while thrusting. Shorter lived than debris and tied to
 the ship rather than to an explosion.
 _Avoid_: exhaust, trail, smoke
+
+**Background**
+The sky behind everything: a dark fill, a band and two star layers. It is the same on every
+screen, random per page load, and it stays dimmer than anything the player can hit or fire.
+_Avoid_: sky, backdrop, starfield
+
+**Band**
+The strip of dense faint stars, cool glow and dark dust that crosses the background from corner
+to corner. It never moves.
+_Avoid_: Milky Way, galaxy, nebula
+
+**Star layer**
+One depth of drifting stars over the band. The near layer is dense and dim, the bright layer is
+sparse and carries the glints and drifts faster. Both drift the same way and wrap at the edges.
+_Avoid_: parallax layer, plane
+
+**Glint**
+The faint cross of light on a star in the bright layer.
+_Avoid_: sparkle, flare, spike
+
+**Twinkle**
+A star slowly pulsing in brightness. Only some stars twinkle, and none fades out entirely.
+_Avoid_: flicker, shimmer, blink. Blink belongs to the ghost.
 
 ### Collisions
 
