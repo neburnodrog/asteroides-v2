@@ -127,7 +127,7 @@ test.describe("where the ship comes back", () => {
 
     // Turn, then fly away from the centre, so neither the point nor the heading is the one the
     // ship was built with.
-    await a.hold("d", 10);
+    await a.hold("ArrowRight", 10);
     await a.hold("w", 40);
 
     const flying = await a.snapshot();

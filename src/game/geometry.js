@@ -4,6 +4,21 @@
 // Vertices are [x, y] pairs. Every function that produces vertices writes into a caller owned
 // array and returns it, because these run for every entity on every frame.
 
+const TAU = 2 * Math.PI;
+
+// Into [0, TAU). The second test catches a tiny negative angle, whose sum with TAU rounds to TAU.
+export function normaliseAngle(angle) {
+  const wrapped = ((angle % TAU) + TAU) % TAU;
+  return wrapped >= TAU ? 0 : wrapped;
+}
+
+// The signed turn from one heading to another the short way, in (-PI, PI]. Exactly behind
+// turns positive, which on a y-down canvas is clockwise.
+export function shortestTurn(from, to) {
+  const turn = normaliseAngle(to - from);
+  return turn > Math.PI ? turn - TAU : turn;
+}
+
 // The ship's hull in local coordinates, nose first. The ship faces +x and the origin is its
 // position. An explicit vertex list rather than a regular polygon, because the notch in the
 // tail is the silhouette.

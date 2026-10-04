@@ -2,9 +2,13 @@ import Shot from "./shot";
 import ShipDebris from "./shipDebris";
 import ShipTrace from "./shipTrace";
 import { randomInteger, calcVectorValue } from "../helpers";
-import { HULL } from "../geometry.js";
+import { HULL, normaliseAngle, shortestTurn } from "../geometry.js";
 
 const PI = Math.PI;
+// Radians per frame, for the keys and for steering alike.
+const TURN_RATE = PI / 40;
+// Fractions of thrust, which is 1.
+const STRAFE = 0.5;
 
 // The same magenta the shots and the ship debris use, so the ship, what it fires and what it
 // breaks into all read as one colour.
@@ -18,6 +22,7 @@ export default class Ship {
 
     // DYNAMIC PROPERTIES
     this.acceleration = 0; // only when arrow_up is pressed
+    this.strafe = 0; // positive to the ship's right
     this.resistance = 0.02;
     this.velocity = { x: 0, y: 0 };
     this.position = { x: p5.width / 2, y: p5.height / 2 };
@@ -40,35 +45,57 @@ export default class Ship {
   }
 
   /** USER ACTION METHODS */
+  // A held turn key beats steering. Releasing it leaves the heading where it is until the
+  // pointer next moves, which Input tracks.
   rotateShip() {
-    if (this.game.input.isHeld("rotateRight")) {
-      this.angleOfShip += PI / 40;
-    } else if (this.game.input.isHeld("rotateLeft")) {
-      this.angleOfShip -= PI / 40;
+    const { input } = this.game;
+
+    if (input.isHeld("rotateRight")) {
+      this.angleOfShip += TURN_RATE;
+    } else if (input.isHeld("rotateLeft")) {
+      this.angleOfShip -= TURN_RATE;
+    } else if (input.isSteering()) {
+      this.steerToward(input.pointer);
     }
 
-    if (this.angleOfShip > 2 * PI) this.angleOfShip % (2 * PI);
-    if (this.angleOfShip < 0) this.angleOfShip + 2 * PI;
+    this.angleOfShip = normaliseAngle(this.angleOfShip);
+  }
+
+  // Along the straight line to the pointer, ignoring wrap. Landing exactly on the aim once it is
+  // within one step is what keeps the ship from oscillating around it.
+  steerToward(pointer) {
+    const dx = pointer.x - this.position.x;
+    const dy = pointer.y - this.position.y;
+    if (dx === 0 && dy === 0) return;
+
+    const aim = normaliseAngle(Math.atan2(dy, dx));
+    const turn = shortestTurn(this.angleOfShip, aim);
+
+    if (Math.abs(turn) <= TURN_RATE) this.angleOfShip = aim;
+    else this.angleOfShip += Math.sign(turn) * TURN_RATE;
   }
 
   accelerate() {
-    if (this.game.input.isHeld("thrust")) {
-      this.acceleration = 1;
-      this.createTraces();
+    const { input } = this.game;
+    const thrusting = input.isHeld("thrust");
+    const strafingLeft = input.isHeld("strafeLeft");
+    const strafingRight = input.isHeld("strafeRight");
 
-      if (this.game?.soundManager && !this.thrustSoundPlaying) {
-        this.game.soundManager.play("shipThrust");
-        this.thrustSoundPlaying = true;
-      }
-    } else {
-      this.acceleration = 0;
+    this.acceleration = thrusting ? 1 : 0;
+    this.strafe = (strafingRight ? STRAFE : 0) - (strafingLeft ? STRAFE : 0);
+    if (thrusting) this.createTraces();
+
+    if (!thrusting && !strafingLeft && !strafingRight) {
       this.stopThrust();
+    } else if (this.game?.soundManager && !this.thrustSoundPlaying) {
+      this.game.soundManager.play("shipThrust");
+      this.thrustSoundPlaying = true;
     }
   }
 
-  // Every path that ends thrust comes through here: the key going up, the ship dying, and the
-  // Game being torn down around a SoundManager that outlives it. The loop plays until something
-  // stops it, so a path that only cleared the flag would leave it running forever.
+  // Every path that ends thrust or strafe comes through here: the keys going up, the ship dying,
+  // and the Game being torn down around a SoundManager that outlives it. The loop plays until
+  // something stops it, so a path that only cleared the flag would leave it running forever.
   stopThrust() {
     if (!this.thrustSoundPlaying) return;
     this.game?.soundManager?.stop("shipThrust");
@@ -101,8 +128,10 @@ export default class Ship {
     const absoluteVelocity = calcVectorValue(x, y);
 
     if (absoluteVelocity < 5) {
-      x += this.acceleration * Math.cos(this.angleOfShip);
-      y += this.acceleration * Math.sin(this.angleOfShip);
+      const cos = Math.cos(this.angleOfShip);
+      const sin = Math.sin(this.angleOfShip);
+      x += this.acceleration * cos - this.strafe * sin;
+      y += this.acceleration * sin + this.strafe * cos;
     }
 
     return {
@@ -154,6 +183,7 @@ export default class Ship {
     this.wrapped = false;
     this.velocity = { x: 0, y: 0 };
     this.acceleration = 0;
+    this.strafe = 0;
     this.exploded = false;
     this.shipDebris = [];
     this.traces = [];

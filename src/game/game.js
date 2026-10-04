@@ -11,6 +11,8 @@ import Ship from "./elements/ship";
 import Scoreboard from "./elements/scoreboard";
 import Asteroids from "./elements/asteroids";
 
+const PLAY_STATES = ["playing", "dying", "ghost"];
+
 const ASTEROID_HITS = {
   X: { points: 20, sound: "asteroidBreakL" },
   M: { points: 50, sound: "asteroidBreakM" },
@@ -146,8 +148,16 @@ export default class Game {
     this.killShip();
   }
 
-  // Entered by a key or by the window losing focus. Nothing sounds under a pause, and a break
-  // still ringing is not resumed: only thrust comes back, on the next step, if the key is down.
+  // Play begins with the keys in charge of the turn, so a pointer that moved on the menu does not
+  // swing the ship before the player has touched the mouse in play.
+  startPlaying() {
+    this.state.startPlaying();
+    this.input.flush();
+  }
+
+  // Entered by a key, by the window losing focus or by the pointer leaving it. Nothing sounds
+  // under a pause, and a break still ringing is not resumed: only the thrust loop comes back, on
+  // the next step, if a thrust or strafe key is down.
   pause() {
     this.state.pause();
     if (!this.state.isPaused()) return;
@@ -197,6 +207,15 @@ export default class Game {
     drawHitboxes(this.p5, this.ship, this.asteroids.array);
   }
 
+  // Written only on a change, so a frame does not touch the canvas style.
+  updateCursor() {
+    const { p5 } = this;
+    const cursor = PLAY_STATES.includes(this.state.current) ? p5.CROSS : p5.ARROW;
+    if (cursor === this.cursor) return;
+    p5.cursor(cursor);
+    this.cursor = cursor;
+  }
+
   draw() {
     // Read on every screen, legal or not, so a press made on the menu cannot pause the first
     // frame of play.
@@ -228,5 +247,7 @@ export default class Game {
         this.gameOverScreen.draw();
         break;
     }
+
+    this.updateCursor();
   }
 }

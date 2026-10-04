@@ -32,6 +32,8 @@ export function attachHarness({
   highScores,
   volume,
   autoPause,
+  pauseIfSteering,
+  input,
   getGame,
   getBackground,
   rebuildBackground,
@@ -88,6 +90,12 @@ export function attachHarness({
       autoPause();
     },
 
+    // The path the pointer leaving the window takes. Ignored for real while the harness is
+    // attached, like the blur.
+    pointerLeave() {
+      pauseIfSteering();
+    },
+
     /** READING */
     snapshot() {
       const g = game();
@@ -120,6 +128,11 @@ export function attachHarness({
       };
     },
 
+    // In canvas coordinates.
+    pointer() {
+      return { ...input.pointer, steering: input.isSteering() };
+    },
+
     // Where everything on the canvas stands: position, heading or spin, and fade. Only for a
     // spec to compare two readings of, never to assert a value from.
     fieldState() {
@@ -141,7 +154,7 @@ export function attachHarness({
 
     /** ARRANGING THE RUN */
     startRun() {
-      game().state.startPlaying();
+      game().startPlaying();
     },
 
     setRun({ score, lives, level } = {}) {
@@ -259,6 +272,12 @@ export function attachHarness({
     // Resistance still applies on the next step, so the ship travels velocity * 0.98.
     setShipVelocity({ x = 0, y = 0 } = {}) {
       game().ship.velocity = { x, y };
+    },
+
+    putShipAt({ x, y }) {
+      const { ship } = game();
+      ship.position = { x, y };
+      ship.prevPosition = { x, y };
     },
 
     // Stacks n asteroids on the ship. Everything else is parked first, so the only overlap in

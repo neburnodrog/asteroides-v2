@@ -36,7 +36,7 @@ export default class PauseScreen {
     p5.text("PAUSED", 0, -160);
 
     p5.textSize(24);
-    p5.text("PRESS ESC/P OR ENTER/SPACE TO RESUME", 0, -90);
+    p5.text("PRESS ESC/P, ENTER/SPACE OR CLICK TO RESUME", 0, -90);
 
     this.volumeControl.draw(70);
 

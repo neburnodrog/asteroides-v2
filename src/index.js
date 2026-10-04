@@ -28,14 +28,6 @@ let spaceQuest;
 
 // p5 SKETCH
 const sketch = (p5) => {
-  let soundManager = new SoundManager(p5);
-  let input = new Input(p5);
-  let run = new Run();
-  let highScores = new HighScores();
-  let volume = new Volume({
-    onChange: (level) => soundManager.setOutputLevel(level),
-  });
-  const longLived = { soundManager, input, run, highScores, volume };
   // Set before the harness module resolves, so no blur in between can pause the game a test is
   // about to arrange.
   let harnessAttached = false;
@@ -44,6 +36,23 @@ const sketch = (p5) => {
   const onFocusLost = () => {
     if (!harnessAttached) autoPause();
   };
+  // A pointer leaving the window takes the player's aim with it, but the arrows do not need it.
+  const pauseIfSteering = () => {
+    if (input.isSteering()) autoPause();
+  };
+
+  let soundManager = new SoundManager(p5);
+  let input = new Input(p5, {
+    onPointerLeave: () => {
+      if (!harnessAttached) pauseIfSteering();
+    },
+  });
+  let run = new Run();
+  let highScores = new HighScores();
+  let volume = new Volume({
+    onChange: (level) => soundManager.setOutputLevel(level),
+  });
+  const longLived = { soundManager, input, run, highScores, volume };
 
   const buildBackground = (options) => {
     background = new Background(p5, options);
@@ -71,6 +80,8 @@ const sketch = (p5) => {
           highScores,
           volume,
           autoPause,
+          pauseIfSteering,
+          input,
           getGame: () => game,
         });
       });
