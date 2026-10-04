@@ -48,11 +48,15 @@ One page per test. Playwright gives each test a fresh page, so no test can inher
 another test arranged. A stale pair of stacked asteroids is what made a hand run report 40
 points where 20 was expected.
 
-## The two exceptions to "never wait"
+## The exceptions to "never wait"
 
 `reload()` is the one verb that leaves the frozen world behind. It loads the page again and waits
 for the harness, then freezes what comes back, because asserting that the high score table
 survives is only worth anything across a real page load.
+
+`resize(width, height)` sets the viewport and waits for the background to be rebuilt. p5 answers the
+browser's own resize event, which arrives on the browser's schedule rather than on a step, so the
+helper waits for that rebuild rather than for a time.
 
 Storage is arranged through verbs too. `setHighScores` fills the table through the same `record`
 call a finished run uses, `breakStorage` makes every write throw for the rest of the page the way a
@@ -62,8 +66,9 @@ storage key and never calls `localStorage` itself.
 
 ## What is deliberately not tested
 
-Rendering. Comparing screenshots of a starfield built from 500 randomly placed stars is a flake
-generator.
+Rendering. Comparing screenshots of a random band and drifting stars is a flake generator. The
+background is asserted through `background()`, which reports every star as it would be drawn this
+frame, and `seedBackground` swaps in a seeded random source when a spec needs the same one twice.
 
 Audibility. A headless browser keeps the audio context suspended, so no spec can hear anything.
 What `sound.spec.mjs` does assert is the part the game controls: that every key the game plays is

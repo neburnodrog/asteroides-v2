@@ -45,6 +45,10 @@ const sketch = (p5) => {
     if (!harnessAttached) autoPause();
   };
 
+  const buildBackground = (options) => {
+    background = new Background(p5, options);
+  };
+
   const resetSketch = (current) => {
     game?.teardown();
     game = new Game(p5, longLived, current, { heart });
@@ -61,6 +65,8 @@ const sketch = (p5) => {
       import("./game/harness.js").then(({ attachHarness }) => {
         attachHarness({
           p5,
+          getBackground: () => background,
+          rebuildBackground: buildBackground,
           run,
           highScores,
           volume,
@@ -82,7 +88,7 @@ const sketch = (p5) => {
   p5.setup = () => {
     p5.createCanvas(findOutWidth(), findOutHeight());
     p5.imageMode(p5.CENTER);
-    background = new Background(p5);
+    buildBackground();
     resetSketch("menu");
     p5.textFont(spaceQuest);
     attachTestHarnessIfAsked();
@@ -95,6 +101,7 @@ const sketch = (p5) => {
   };
 
   p5.draw = () => {
+    if (!game.state.isPaused()) background.step();
     background.draw();
     game.draw();
 
@@ -113,7 +120,7 @@ const sketch = (p5) => {
 
   p5.windowResized = () => {
     p5.resizeCanvas(findOutWidth(), findOutHeight());
-    background = new Background(p5);
+    buildBackground();
   };
 };
 

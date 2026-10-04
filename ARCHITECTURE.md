@@ -16,7 +16,7 @@ Domain vocabulary lives in `CONTEXT.md`. There are no external services. The onl
 | Game Controller | `src/game/` | Per-level Game instance, state-machine dispatch, collision response, and the run scoped score, lives and level | `game.js`, `gameState.js`, `run.js`, `input.js`, `collisions.js`, `soundManager.js`, `cues.js`, `helpers.js` |
 | High score table | `src/game/highScores.js` | The ten best runs on this browser, and one of the two `localStorage` owners in `src/` | `highScores.js` |
 | Volume | `src/game/volume.js` | The one volume step every cue plays under, and the other `localStorage` owner | `volume.js`, `state/volumeControl.js` |
-| Entities | `src/game/elements/` | Ship, Asteroids, Shot, Debris, Scoreboard, Background, Stars. All class-based, all own their own `draw()` | `ship.js`, `asteroids.js`, `shot.js`, `debris.js`, `asteroidDebris.js`, `shipDebris.js`, `shipTrace.js`, `background.js`, `stars.js`, `scoreboard.js` |
+| Entities | `src/game/elements/` | Ship, Asteroids, Shot, Debris, Scoreboard, Background. All class-based, all own their own `draw()` | `ship.js`, `asteroids.js`, `shot.js`, `debris.js`, `asteroidDebris.js`, `shipDebris.js`, `shipTrace.js`, `background.js`, `scoreboard.js` |
 | Test seam | `src/game/harness.js`, `e2e/` | Arrangement verbs exposed to Playwright, plus the spec suite | `harness.js`, `e2e/fixtures.mjs`, `e2e/*.spec.mjs`, `playwright.config.mjs` |
 | Screens | `src/game/state/` | Non-playing game states rendered as full-canvas overlays | `startMenuScreen.js` (exports `StartMenuScreen` and `LevelUpScreen`), `gameOverScreen.js` |
 | Assets | `src/{font,images,sounds,css}/` | Static assets imported via ES modules and bundled by Webpack's `type: "asset"` rule | `font/SpaceQuest-yOY3.ttf`, `images/heart.png`, `sounds/*.wav` |
@@ -69,7 +69,8 @@ Domain vocabulary lives in `CONTEXT.md`. There are no external services. The onl
   or `run.score` directly has to be rewritten by the next refactor, which is the whole reason the
   harness exists. Add a verb instead, and register it in `VERBS` in `e2e/fixtures.mjs`.
 - **Asset references must be ES imports.** Webpack's `type: "asset"` rule resolves them at build time. String URLs to `public/` or `dist/` will not work, and adding `require()` calls will conflict with the `.babelrc` `modules: false` setting.
-- **A paused frame renders and steps nothing.** `PauseScreen` calls `Asteroids.render`, `Ship.render` and the scoreboard, never `step()` or `draw()`. `Ship.draw` filters and fires, so it is not safe here. `Game.pause` stops every cue and flushes `Input`. `Game.resume` flushes again, so the confirm that resumes cannot also fire. Only thrust comes back, on the next step, if the key is still down. Auto-pause on `blur` and on a hidden `visibilitychange` is wired in `index.js` and ignored while the harness is attached, whose `autoPause` verb calls the same function.
+- **A paused frame renders and steps nothing.** `PauseScreen` calls `Asteroids.render`, `Ship.render` and the scoreboard, never `step()` or `draw()`. `Ship.draw` filters and fires, so it is not safe here. `Game.pause` stops every cue and flushes `Input`. `Game.resume` flushes again, so the confirm that resumes cannot also fire. Only thrust comes back, on the next step, if the key is still down. Auto-pause on `blur` and on a hidden `visibilitychange` is wired in `index.js` and ignored while the harness is attached, whose `autoPause` verb calls the same function. The background follows the same rule: `index.js` skips `Background.step` while `state.isPaused()`, so the stars hold still under the pause screen and drifts on every other screen.
+- **The band is never copied into the game canvas.** `Background` paints it once per build into an offscreen canvas and sets it as the game canvas's CSS background, then clears the canvas to transparent each frame. A per-frame `drawImage` of the band cost 27ms a frame at 2560x1440 and `devicePixelRatio` 2, against 0.1ms for the whole frame without it. Anything drawn under the game has to go on that background or onto the canvas after `p5.clear()`, never as an opaque full-canvas fill.
 - **Document-level keydown guard must remain.** The handler at the bottom of `index.js` prevents the browser from scrolling when arrows/space are pressed. Removing it breaks gameplay. Escape and P are not in it: neither scrolls the page or has another default the game has to suppress. The guard is browser-scroll suppression, not game-action mapping, so it stays separate from the `Input` module.
 - **Entity-vs-entity geometry lives only in `src/game/collisions.js`.** No other module measures overlap between two entities. It holds the policy: the stroke allowance, the ghost's clearance, the broad phase and the substep trigger. The shape primitives it measures with live in `src/game/geometry.js`, which is pure in the stronger sense: no imports at all, no state, no p5, and no knowledge of an entity. `collisions.js` reports hits and never applies them, so scoring, sound, lives and state transitions stay in `Game`. Rendering reads its vertices from `geometry.js` too, which is what stops a shape being drawn one way and collided another. (The 300px check in `asteroids.js` keeps a new level's asteroids out of the middle of the canvas. That is placement, not collision, and stays where it is.)
 - **`shipVsAsteroids` returns at most one asteroid.** The ship can lose only one life per frame no matter how many asteroids overlap it. This is enforced by the `find` in `collisions.js`, not by a guard in `Game`. Do not reintroduce a loop over all overlapping asteroids in the ship path.
@@ -95,7 +96,7 @@ None. ASTEROiDES is fully client-side and offline-capable once bundled. The only
 ## Data Flow (per frame)
 
 1. Browser fires p5's `draw` tick (60fps target).
-2. `index.js` draws `Background` (parallax stars), then delegates to `game.draw()`.
+2. `index.js` steps `Background` unless the game is paused, draws it, then delegates to `game.draw()`.
 3. `Game.draw()` reads the `pause` action and toggles a pause where one is legal, then switches on `state.current` to select one of: `startMenuScreen` / `playGame()` (for `playing`, `dying` and `ghost`) / `pauseScreen` / `levelUpScreen` / `gameOverScreen`.
 4. In `playGame()`:
    a. `asteroids.step()` then `ship.step()`. Every entity that collides advances its position and rotation, keeping where it was as `prevPosition` and `prevAngle` and flagging `wrapped` if it teleported across the canvas. `Ship.step` also steps its shots, which keep a `prevPosition` for the same reason and never wrap: a shot is filtered out at the canvas edge. Nothing below this point moves anything, so every check reads the frame about to be drawn.
@@ -229,7 +230,7 @@ the whole e2e suite rests on nothing in the engine reading wall time.
 ### Why the e2e suite drives a harness rather than the canvas
 
 The game renders to a canvas, so a black-box test has nothing to assert on beyond pixels.
-Screenshot comparison was rejected: the background is 500 randomly placed stars, and every
+Screenshot comparison was rejected: the background is a random band and two layers of drifting, twinkling stars, and every
 asteroid has a random radius, side count and rotation, so a pixel diff would fail on noise.
 
 Driving the game live and sampling it also fails, and did fail. A first pass at verifying the

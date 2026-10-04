@@ -42,6 +42,9 @@ const VERBS = [
   "autoPause",
   "fieldState",
   "seedVolume",
+  "background",
+  "seedBackground",
+  "placeStar",
 ];
 
 export const test = base.extend({
@@ -85,6 +88,16 @@ export const test = base.extend({
     // A real window event, the kind the browser sends when the player switches away or back.
     api.dispatchWindowEvent = (type) =>
       page.evaluate((name) => window.dispatchEvent(new Event(name)), type);
+
+    // Waits rather than steps. See "The exceptions to never wait" in README.md.
+    api.resize = async (width, height) => {
+      const { bandPaints } = await api.background();
+      await page.setViewportSize({ width, height });
+      await page.waitForFunction(
+        (before) => window.__asteroides.background().bandPaints > before,
+        bandPaints
+      );
+    };
 
     api.hold = async (key, frames) => {
       await page.keyboard.down(key);

@@ -16,8 +16,26 @@ import {
 import { NOSE_REACH } from "./geometry.js";
 import { setHitboxes } from "./debugDraw.js";
 import { variationRange } from "./soundManager.js";
+import { PALETTE, STAR_TINTS, bandPaintCount } from "./elements/background.js";
 
-export function attachHarness({ p5, run, highScores, volume, autoPause, getGame }) {
+// mulberry32. Any value in [0, 1) will do; this one is short and seeds from one integer.
+const seededRandom = (seed) => () => {
+  seed = (seed + 0x6d2b79f5) | 0;
+  let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
+
+export function attachHarness({
+  p5,
+  run,
+  highScores,
+  volume,
+  autoPause,
+  getGame,
+  getBackground,
+  rebuildBackground,
+}) {
   const game = () => getGame();
 
   // Reported as a boolean rather than two floats, so a spec asserts the ship came back where it
@@ -303,6 +321,40 @@ export function attachHarness({ p5, run, highScores, volume, autoPause, getGame 
       if (sides !== undefined) asteroid.sides = sides;
       if (angle !== undefined) asteroid.rotation.angle = angle;
       return { x, y, radius: asteroid.radius };
+    },
+
+    /** THE BACKGROUND */
+    // Every star as it would be drawn this frame. Only for a spec to compare two readings of or
+    // to relate to each other, never to assert a coordinate from.
+    background() {
+      const background = getBackground();
+      return {
+        canvas: { width: p5.width, height: p5.height },
+        frame: background.frame,
+        direction: { ...background.direction },
+        band: { fromLeft: background.band.fromLeft },
+        bandPaints: bandPaintCount(),
+        palette: PALETTE,
+        layers: background.layers.map((layer) => ({
+          name: layer.name,
+          speed: layer.speed,
+          stars: layer.stars.map((star) => ({
+            x: layer.xOf(star),
+            y: layer.yOf(star),
+            alpha: layer.alphaOf(star, background.frame),
+            brightness: star.brightness,
+            tint: STAR_TINTS[star.tint],
+          })),
+        })),
+      };
+    },
+
+    seedBackground(seed) {
+      rebuildBackground({ random: seededRandom(seed) });
+    },
+
+    placeStar({ layer, index, x, y }) {
+      getBackground().layers[layer].place(index, x, y);
     },
 
     /** SOUND */
