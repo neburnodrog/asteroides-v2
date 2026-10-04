@@ -10,7 +10,7 @@ import heartImage from "./images/heart.png";
 import "./images/favicon.ico";
 
 // GAME COMPONENTS
-import Background from "./game/elements/background.js";
+import { makePrototypeBackground, attachPrototypeSwitcher } from "./game/elements/prototypeBackgrounds.js";
 import Game from "./game/game";
 import Run from "./game/run.js";
 import HighScores from "./game/highScores.js";
@@ -82,7 +82,8 @@ const sketch = (p5) => {
   p5.setup = () => {
     p5.createCanvas(findOutWidth(), findOutHeight());
     p5.imageMode(p5.CENTER);
-    background = new Background(p5);
+    background = makePrototypeBackground(p5);
+    attachPrototypeSwitcher(() => (background = makePrototypeBackground(p5)));
     resetSketch("menu");
     p5.textFont(spaceQuest);
     attachTestHarnessIfAsked();
@@ -95,6 +96,7 @@ const sketch = (p5) => {
   };
 
   p5.draw = () => {
+    if (!game.state.isPaused()) background.step();
     background.draw();
     game.draw();
 
@@ -113,7 +115,7 @@ const sketch = (p5) => {
 
   p5.windowResized = () => {
     p5.resizeCanvas(findOutWidth(), findOutHeight());
-    background = new Background(p5);
+    background = makePrototypeBackground(p5);
   };
 };
 
