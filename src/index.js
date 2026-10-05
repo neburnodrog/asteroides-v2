@@ -19,6 +19,7 @@ import { findOutHeight, findOutWidth } from "./game/helpers";
 
 import SoundManager from "./game/soundManager.js";
 import Input from "./game/input.js";
+import Fullscreen from "./game/fullscreen.js";
 
 // global variables
 let background;
@@ -47,12 +48,19 @@ const sketch = (p5) => {
       if (!harnessAttached) pauseIfSteering();
     },
   });
+  // Leaving fullscreen or losing the lock pauses whoever holds the turn, since either can come
+  // from an Escape the browser kept for itself.
+  let fullscreen = new Fullscreen(p5, input, {
+    onLost: () => {
+      if (!harnessAttached) autoPause();
+    },
+  });
   let run = new Run();
   let highScores = new HighScores();
   let volume = new Volume({
     onChange: (level) => soundManager.setOutputLevel(level),
   });
-  const longLived = { soundManager, input, run, highScores, volume };
+  const longLived = { soundManager, input, fullscreen, run, highScores, volume };
 
   const buildBackground = (options) => {
     background = new Background(p5, options);
@@ -82,6 +90,7 @@ const sketch = (p5) => {
           autoPause,
           pauseIfSteering,
           input,
+          fullscreen,
           getGame: () => game,
         });
       });

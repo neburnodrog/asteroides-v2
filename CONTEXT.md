@@ -56,8 +56,8 @@ starts fresh.
 _Avoid_: reset, restart, respawn. A reset ends the run and starts a new one.
 
 **Pause**
-A hold during play, a death included, entered with Escape or P, by the window losing focus, or by the pointer leaving the window
-while steering is in control.
+A hold during play, a death included, entered with Escape or P, by the window losing focus, by the pointer leaving the window
+while steering is in control, or by fullscreen or the pointer lock ending.
 Nothing moves, debris and traces included, no frame of a death counts, and no cue sounds. Focus
 coming back does not resume. The pause screen offers resume, the volume and the
 controls. Resuming returns to exactly the moment the pause began. A pause is not a rebuild.
@@ -103,7 +103,9 @@ _Avoid_: sidestep, lateral thrust, slide
 
 **Steer**
 The ship turning toward the mouse pointer at its normal turn rate, the short way round, until it
-faces the pointer. Turning with the keys overrides it until the pointer next moves.
+faces the pointer. Turning with the keys overrides it until the pointer next moves. In
+fullscreen play the pointer is locked, so the game draws a crosshair the mouse pushes around the
+canvas and steers toward that instead.
 _Avoid_: aim, mouse look, point
 
 **Wrap**

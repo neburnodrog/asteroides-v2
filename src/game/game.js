@@ -10,6 +10,7 @@ import { drawHitboxes } from "./debugDraw";
 import Ship from "./elements/ship";
 import Scoreboard from "./elements/scoreboard";
 import Asteroids from "./elements/asteroids";
+import { drawCrosshair } from "./elements/crosshair";
 
 const PLAY_STATES = ["playing", "dying", "ghost"];
 
@@ -20,8 +21,14 @@ const ASTEROID_HITS = {
 };
 
 export default class Game {
-  constructor(p5, { soundManager, input, run, highScores, volume }, current, images) {
+  constructor(
+    p5,
+    { soundManager, input, run, highScores, volume, fullscreen },
+    current,
+    images
+  ) {
     this.p5 = p5;
+    this.fullscreen = fullscreen;
     this.soundManager = soundManager;
     this.input = input;
     this.run = run;
@@ -201,6 +208,8 @@ export default class Game {
     this.asteroids.draw();
     this.ship.draw();
     this.scoreboard.draw(this.run);
+    // A locked pointer hides the system cursor, so the game draws its own.
+    if (this.input.isPointerLocked()) drawCrosshair(this.p5, this.input.pointer);
 
     // Off in every build. The harness is the only thing that turns it on, and the harness
     // exists only in a development build loaded with ?e2e=1.
@@ -208,15 +217,17 @@ export default class Game {
   }
 
   // Written only on a change, so a frame does not touch the canvas style.
-  updateCursor() {
+  updateCursor(inPlay) {
     const { p5 } = this;
-    const cursor = PLAY_STATES.includes(this.state.current) ? p5.CROSS : p5.ARROW;
+    const cursor = inPlay ? p5.CROSS : p5.ARROW;
     if (cursor === this.cursor) return;
     p5.cursor(cursor);
     this.cursor = cursor;
   }
 
   draw() {
+    if (this.input.wasPressed("fullscreen")) this.fullscreen.toggle();
+
     // Read on every screen, legal or not, so a press made on the menu cannot pause the first
     // frame of play.
     if (this.input.wasPressed("pause")) {
@@ -248,6 +259,8 @@ export default class Game {
         break;
     }
 
-    this.updateCursor();
+    const inPlay = PLAY_STATES.includes(this.state.current);
+    this.updateCursor(inPlay);
+    this.fullscreen.syncPointerLock(inPlay);
   }
 }

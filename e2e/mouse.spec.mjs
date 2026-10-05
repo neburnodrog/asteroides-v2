@@ -10,7 +10,7 @@ const TAU = 2 * Math.PI;
 const normalised = (angle) => ((angle % TAU) + TAU) % TAU;
 
 // The angle from the ship to the pointer as the game sees both.
-const aimOf = async (a) => {
+const bearingOf = async (a) => {
   const { ship } = await a.fieldState();
   const pointer = await a.pointer();
   return normalised(Math.atan2(pointer.y - ship.y, pointer.x - ship.x));
@@ -32,16 +32,16 @@ test.describe("steering", () => {
     const ship = await startQuietRun(a);
     // About 0.29 radians below the heading: three full steps, then less than one.
     await a.pointAt(ship.x + 100, ship.y + 30);
-    const aim = await aimOf(a);
-    expect(aim).toBeGreaterThan(3 * TURN);
-    expect(aim).toBeLessThan(4 * TURN);
+    const bearing = await bearingOf(a);
+    expect(bearing).toBeGreaterThan(3 * TURN);
+    expect(bearing).toBeLessThan(4 * TURN);
 
     await a.step(3);
     expect(await heading(a)).toBeCloseTo(3 * TURN, 10);
 
     await a.step();
     const settled = await heading(a);
-    expect(settled).toBeCloseTo(aim, 10);
+    expect(settled).toBeCloseTo(bearing, 10);
 
     await a.step(10);
     expect(await heading(a)).toBe(settled);
@@ -56,7 +56,7 @@ test.describe("steering", () => {
 
     // An eighth of a turn up, which is ten steps give or take where the ship's centre falls.
     await a.step(11);
-    expect(await heading(a)).toBeCloseTo(await aimOf(a), 10);
+    expect(await heading(a)).toBeCloseTo(await bearingOf(a), 10);
   });
 
   test("a pointer behind the ship is reached in at most 40 frames", async ({
@@ -66,10 +66,10 @@ test.describe("steering", () => {
     await a.pointAt(ship.x - 200, ship.y);
 
     await a.step(40);
-    expect(await heading(a)).toBeCloseTo(await aimOf(a), 10);
+    expect(await heading(a)).toBeCloseTo(await bearingOf(a), 10);
   });
 
-  test("aims along the straight line, not across the wrap", async ({
+  test("steers along the straight line, not across the wrap", async ({
     asteroides: a,
   }) => {
     await startQuietRun(a);
@@ -78,9 +78,9 @@ test.describe("steering", () => {
     await a.pointAt(20, canvas.height / 2);
 
     await a.step(40);
-    const aim = await aimOf(a);
-    expect(aim).toBeCloseTo(Math.PI, 1);
-    expect(await heading(a)).toBeCloseTo(aim, 10);
+    const bearing = await bearingOf(a);
+    expect(bearing).toBeCloseTo(Math.PI, 1);
+    expect(await heading(a)).toBeCloseTo(bearing, 10);
   });
 
   test("the arrows override steering until the pointer moves again", async ({
@@ -89,19 +89,19 @@ test.describe("steering", () => {
     const ship = await startQuietRun(a);
     await a.pointAt(ship.x + 100, ship.y + 100);
     await a.step(10);
-    expect(await heading(a)).toBeCloseTo(await aimOf(a), 10);
-    const aimed = await heading(a);
+    expect(await heading(a)).toBeCloseTo(await bearingOf(a), 10);
+    const steered = await heading(a);
 
     await a.hold("ArrowLeft", 5);
     const turned = await heading(a);
-    expect(turned).toBeCloseTo(aimed - 5 * TURN, 10);
+    expect(turned).toBeCloseTo(steered - 5 * TURN, 10);
 
     await a.step(10);
     expect(await heading(a)).toBe(turned);
 
     await a.pointAt(ship.x + 100, ship.y + 101);
     await a.step(10);
-    expect(await heading(a)).toBeCloseTo(await aimOf(a), 10);
+    expect(await heading(a)).toBeCloseTo(await bearingOf(a), 10);
   });
 
   test("a pointer moved before play began does not steer", async ({
