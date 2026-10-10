@@ -1,9 +1,7 @@
 import VolumeControl from "./volumeControl";
 import { TEXT_COLOR } from "./palette";
 
-export const CONTROLS_TEXT =
-  "W/S or UP/DOWN to thrust & brake, A/D to strafe\n" +
-  "MOUSE or LEFT/RIGHT to turn, CLICK or ENTER/SPACE to shoot";
+export const CONTROLS_TEXT = "Controls: ASWD/ARROWS to move & ENTER/SPACE to shoot";
 
 export class StartMenuScreen {
   constructor(p5, game) {
@@ -25,7 +23,7 @@ export class StartMenuScreen {
     this.level = { text: `LEVEL `, position: { x: 0, y: 0 } };
     this.volume = { control: new VolumeControl(p5, game), y: 52 };
     this.start = {
-      text: "CLICK OR PRESS ENTER/SPACE TO START",
+      text: "PRESS ENTER/SPACE TO START",
       position: { x: 0, y: 100 },
     };
     this.controls = {
@@ -58,7 +56,6 @@ export class StartMenuScreen {
       this.level.position.y
     );
     p5.text(this.start.text, this.start.position.x, this.start.position.y);
-    p5.textSize(24);
     p5.text(
       this.controls.text,
       this.controls.position.x,
@@ -99,7 +96,7 @@ export class StartMenuScreen {
   }
 
   _onConfirm() {
-    this.game.startPlaying();
+    this.game.state.startPlaying();
   }
 
   draw() {

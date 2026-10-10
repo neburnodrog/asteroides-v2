@@ -1,5 +1,4 @@
 import {
-  shortestTurn,
   HULL_TRIANGLES,
   HULL_REACH,
   ngonVertices,
@@ -47,10 +46,6 @@ const triangleScratch = hullTriangleBuffer();
 const MAX_SUBSTEPS = 8;
 
 const lerp = (from, to, t) => from + (to - from) * t;
-
-// The ship's heading is kept in [0, 2PI), so a frame that turns across zero jumps by nearly a full
-// turn. Interpolating the short way keeps the sample on the arc the ship actually swept.
-const lerpAngle = (from, to, t) => from + shortestTurn(from, to) * t;
 
 // How many places along the frame a pair is measured at. `mover` is the ship or a shot. A shot
 // carries no `wrapped` flag because it is filtered out of the game at the canvas edge rather
@@ -110,7 +105,7 @@ function touchesAt(ship, asteroid, clearance, t) {
     rockScratch
   );
 
-  const shipAngle = lerpAngle(ship.prevAngle, ship.angleOfShip, t);
+  const shipAngle = lerp(ship.prevAngle, ship.angleOfShip, t);
 
   for (let i = 0; i < HULL_TRIANGLES.length; i++) {
     const triangle = transformInto(

@@ -48,15 +48,6 @@ One page per test. Playwright gives each test a fresh page, so no test can inher
 another test arranged. A stale pair of stacked asteroids is what made a hand run report 40
 points where 20 was expected.
 
-## The mouse
-
-`pointAt(x, y)` moves the real mouse to a point in canvas coordinates, and `click()` presses and
-releases it there and steps one frame, the way `press` does for a key. `pointer()` reports where
-the game saw the pointer and whether it steers. A spec computes an expected heading from that
-reading rather than from the point it asked for, because the canvas sits at a fractional page
-offset and the browser rounds the event. The real `mouseleave` is ignored while the harness is
-attached, like the blur, so `pointerLeave()` is the only way a spec reaches that pause.
-
 ## The exceptions to "never wait"
 
 `reload()` is the one verb that leaves the frozen world behind. It loads the page again and waits

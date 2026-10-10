@@ -45,9 +45,6 @@ const VERBS = [
   "background",
   "seedBackground",
   "placeStar",
-  "putShipAt",
-  "pointer",
-  "pointerLeave",
 ];
 
 export const test = base.extend({
@@ -101,51 +98,6 @@ export const test = base.extend({
         bandPaints
       );
     };
-
-    // Canvas coordinates to page coordinates, past the canvas border. Moves without stepping,
-    // like a key held down: the next step() reads where the pointer is.
-    api.pointAt = async (x, y) => {
-      const origin = await page.evaluate(() => {
-        const canvas = document.querySelector("canvas");
-        const rect = canvas.getBoundingClientRect();
-        return {
-          x: rect.left + canvas.clientLeft,
-          y: rect.top + canvas.clientTop,
-        };
-      });
-      await page.mouse.move(origin.x + x, origin.y + y);
-    };
-
-    api.mouseDown = (button = "left") => page.mouse.down({ button });
-    api.mouseUp = (button = "left") => page.mouse.up({ button });
-
-    // A real click wherever the pointer stands, then one frame for the game to read it.
-    api.click = async ({ button = "left" } = {}) => {
-      await page.mouse.down({ button });
-      await page.mouse.up({ button });
-      await api.step();
-    };
-
-    // Whether the canvas cancels the event that would open the browser's context menu.
-    api.contextMenuSuppressed = () =>
-      page.evaluate(() => {
-        const event = new MouseEvent("contextmenu", {
-          bubbles: true,
-          cancelable: true,
-        });
-        document.querySelector("canvas").dispatchEvent(event);
-        return event.defaultPrevented;
-      });
-
-    // A real mouseleave on the document, the event the browser sends when the pointer leaves the
-    // window.
-    api.dispatchPointerLeave = () =>
-      page.evaluate(() =>
-        document.documentElement.dispatchEvent(new MouseEvent("mouseleave"))
-      );
-
-    api.cursor = () =>
-      page.evaluate(() => getComputedStyle(document.querySelector("canvas")).cursor);
 
     api.hold = async (key, frames) => {
       await page.keyboard.down(key);

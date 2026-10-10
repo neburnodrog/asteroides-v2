@@ -31,7 +31,7 @@ export default class GameOverScreen {
             p5.textSize(this.textSize);
         }
 
-        p5.text("CLICK OR PRESS SPACE TO PLAY AGAIN", 0, 200)
+        p5.text('PRESS SPACE TO PLAY AGAIN', 0, 200)
 
         p5.pop();
 

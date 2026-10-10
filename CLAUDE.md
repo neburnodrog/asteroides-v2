@@ -82,13 +82,12 @@ Defined by `KEY_MAP` in `src/game/input.js`. Change them there, not here.
 
 - Thrust: `W` or up arrow
 - Brake: `S` or down arrow
-- Steer: move the mouse. The ship turns toward the pointer.
-- Rotate left / right: left arrow / right arrow. A held arrow overrides steering until the pointer next moves.
-- Strafe left / right: `A` / `D`
-- Shoot: left click, space or enter
-- Confirm (start menu, level-up, game-over restart, pause screen): left click, space or enter
+- Rotate left: `A` or left arrow
+- Rotate right: `D` or right arrow
+- Shoot: space or enter
+- Confirm (start menu, level-up, game-over restart): space or enter
 - Volume down / up (start menu, pause screen): `A` or left arrow / `D` or right arrow
-- Pause and resume: Escape or `P`. Confirm also resumes. The pointer leaving the window pauses while steering is in control.
+- Pause and resume: Escape or `P`. Confirm also resumes.
 
 ## Agent skills
 
