@@ -48,8 +48,6 @@ const VERBS = [
   "putShipAt",
   "pointer",
   "pointerLeave",
-  "fullscreenState",
-  "setPointerLocked",
 ];
 
 export const test = base.extend({
@@ -104,8 +102,6 @@ export const test = base.extend({
       );
     };
 
-    let mouse = { x: 0, y: 0 };
-
     // Canvas coordinates to page coordinates, past the canvas border. Moves without stepping,
     // like a key held down: the next step() reads where the pointer is.
     api.pointAt = async (x, y) => {
@@ -117,35 +113,7 @@ export const test = base.extend({
           y: rect.top + canvas.clientTop,
         };
       });
-      mouse = { x: origin.x + x, y: origin.y + y };
-      await page.mouse.move(mouse.x, mouse.y);
-    };
-
-    // A relative move in page pixels from wherever the mouse stands. Playwright's mouse starts
-    // at the page origin. Under a pointer lock the game reads only the movement.
-    // Chromium reports no movement on the first mousemove a page gets, so that one goes to the
-    // spot the mouse already stands on.
-    let mouseHasMoved = false;
-    api.moveMouseBy = async (dx, dy) => {
-      if (!mouseHasMoved) await page.mouse.move(mouse.x, mouse.y);
-      mouseHasMoved = true;
-      mouse = { x: mouse.x + dx, y: mouse.y + dy };
-      await page.mouse.move(mouse.x, mouse.y);
-    };
-
-    // See "The exceptions to never wait" in README.md.
-    api.waitForFullscreen = async (on) => {
-      await page.waitForFunction(
-        (wanted) => Boolean(document.fullscreenElement) === wanted,
-        on
-      );
-      await api.step();
-    };
-
-    // A real click on the button, then one frame for the game to read anything that reached it.
-    api.clickFullscreenButton = async () => {
-      await page.getByRole("button", { name: "Fullscreen" }).click();
-      await api.step();
+      await page.mouse.move(origin.x + x, origin.y + y);
     };
 
     api.mouseDown = (button = "left") => page.mouse.down({ button });

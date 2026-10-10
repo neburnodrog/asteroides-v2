@@ -10,7 +10,6 @@ const KEY_MAP = {
   volumeDown: [65, 37],
   volumeUp: [68, 39],
   pause: [27, 80],
-  fullscreen: [70],
 };
 
 const ACTIONS_BY_KEY = {};
@@ -22,11 +21,6 @@ for (const [action, codes] of Object.entries(KEY_MAP)) {
 
 // A left click is one more press of what Space does, under its own pending entry.
 const CLICK = "click";
-
-const clampToCanvas = (p5, { x, y }) => ({
-  x: Math.min(Math.max(x, 0), p5.width),
-  y: Math.min(Math.max(y, 0), p5.height),
-});
 const CLICK_ACTIONS = ["shoot", "confirm"];
 const TURN_ACTIONS = ["rotateLeft", "rotateRight"];
 
@@ -41,9 +35,6 @@ export default class Input {
     this.pointer = null;
     // Last input wins: a pointer move hands the turn to steering, a turn key takes it back.
     this._steering = false;
-    // Under a pointer lock the event carries only movement, so `pointer` becomes a virtual one
-    // the mouse pushes around inside the canvas.
-    this._locked = false;
 
     p5.keyPressed = () => {
       const actions = ACTIONS_BY_KEY[p5.keyCode];
@@ -74,15 +65,6 @@ export default class Input {
     const canvas = this.p5.canvas;
     if (!event || !canvas) return;
 
-    if (this._locked) {
-      this.pointer = clampToCanvas(this.p5, {
-        x: this.pointer.x + event.movementX,
-        y: this.pointer.y + event.movementY,
-      });
-      this._steering = true;
-      return;
-    }
-
     const rect = canvas.getBoundingClientRect();
     this.pointer = {
       x: event.clientX - rect.left - canvas.clientLeft,
@@ -93,20 +75,6 @@ export default class Input {
 
   isSteering() {
     return this._steering;
-  }
-
-  isPointerLocked() {
-    return this._locked;
-  }
-
-  // The virtual pointer starts where the real one was last seen, or on the centre if it never
-  // was, and the canvas may have shrunk since.
-  setPointerLocked(locked) {
-    this._locked = locked;
-    if (!locked) return;
-
-    const { width, height } = this.p5;
-    this.pointer = clampToCanvas(this.p5, this.pointer ?? { x: width / 2, y: height / 2 });
   }
 
   isHeld(action) {

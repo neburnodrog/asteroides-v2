@@ -57,7 +57,6 @@ one. The short version:
 - `src/game/elements/` — game entities (Ship, Asteroids, Shot, Debris) and visual elements (Background, Score, Life)
 - `src/game/state/`: screen state classes (StartMenuScreen, GameOverScreen, LevelUpScreen, PauseScreen) and the VolumeControl two of them share
 - `src/game/soundManager.js` — wraps p5.sound with reverb effects
-- `src/game/fullscreen.js`: fullscreen, its corner button and the pointer lock during fullscreen play
 - `src/game/helpers.js` — viewport sizing, polygon drawing, vector utilities
 - `src/css/`, `src/font/`, `src/images/`, `src/sounds/` — assets
 
@@ -90,7 +89,6 @@ Defined by `KEY_MAP` in `src/game/input.js`. Change them there, not here.
 - Confirm (start menu, level-up, game-over restart, pause screen): left click, space or enter
 - Volume down / up (start menu, pause screen): `A` or left arrow / `D` or right arrow
 - Pause and resume: Escape or `P`. Confirm also resumes. The pointer leaving the window pauses while steering is in control.
-- Fullscreen: `F`, or the button in the bottom right corner of the page. Fullscreen play locks the pointer, and leaving fullscreen or losing the lock during play pauses.
 
 ## Agent skills
 

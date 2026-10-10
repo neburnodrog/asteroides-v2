@@ -2,7 +2,7 @@ import VolumeControl from "./volumeControl";
 import { TEXT_COLOR } from "./palette";
 
 export const CONTROLS_TEXT =
-  "W/S or UP/DOWN to thrust & brake, A/D to strafe, F for fullscreen\n" +
+  "W/S or UP/DOWN to thrust & brake, A/D to strafe\n" +
   "MOUSE or LEFT/RIGHT to turn, CLICK or ENTER/SPACE to shoot";
 
 export class StartMenuScreen {

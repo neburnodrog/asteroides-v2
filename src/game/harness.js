@@ -34,7 +34,6 @@ export function attachHarness({
   autoPause,
   pauseIfSteering,
   input,
-  fullscreen,
   getGame,
   getBackground,
   rebuildBackground,
@@ -127,20 +126,6 @@ export function attachHarness({
         // number either side of one rather than asserting any particular angle.
         shipHeading: g.ship.angleOfShip,
       };
-    },
-
-    fullscreenState() {
-      return {
-        active: fullscreen.isActive(),
-        wantsLock: fullscreen.wantsLock,
-        lockRequests: fullscreen.lockRequests,
-        locked: input.isPointerLocked(),
-      };
-    },
-
-    // See "The mouse" in e2e/README.md.
-    setPointerLocked(locked) {
-      fullscreen.lockChanged(locked);
     },
 
     // In canvas coordinates.

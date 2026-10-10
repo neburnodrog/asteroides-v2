@@ -57,10 +57,6 @@ reading rather than from the point it asked for, because the canvas sits at a fr
 offset and the browser rounds the event. The real `mouseleave` is ignored while the harness is
 attached, like the blur, so `pointerLeave()` is the only way a spec reaches that pause.
 
-Headless Chromium enters fullscreen but refuses every pointer lock. `setPointerLocked(on)` drives
-the handler `pointerlockchange` calls, and `moveMouseBy(dx, dy)` sends the relative motion a
-locked pointer reads. `fullscreenState().wantsLock` reports what the game asked the browser for.
-
 ## The exceptions to "never wait"
 
 `reload()` is the one verb that leaves the frozen world behind. It loads the page again and waits
@@ -70,10 +66,6 @@ survives is only worth anything across a real page load.
 `resize(width, height)` sets the viewport and waits for the background to be rebuilt. p5 answers the
 browser's own resize event, which arrives on the browser's schedule rather than on a step, so the
 helper waits for that rebuild rather than for a time.
-
-`waitForFullscreen(on)` waits for the browser to enter or leave fullscreen, then steps one frame.
-The request resolves on the browser's schedule, a frame or two after the F press or the button
-click that made it.
 
 Storage is arranged through verbs too. `setHighScores` fills the table through the same `record`
 call a finished run uses, `breakStorage` makes every write throw for the rest of the page the way a

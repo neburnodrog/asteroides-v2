@@ -61,17 +61,17 @@ export default class Ship {
     this.angleOfShip = normaliseAngle(this.angleOfShip);
   }
 
-  // Along the straight line to the pointer, ignoring wrap. Landing exactly on the bearing once
-  // it is within one step is what keeps the ship from oscillating around it.
+  // Along the straight line to the pointer, ignoring wrap. Landing exactly on the aim once it is
+  // within one step is what keeps the ship from oscillating around it.
   steerToward(pointer) {
     const dx = pointer.x - this.position.x;
     const dy = pointer.y - this.position.y;
     if (dx === 0 && dy === 0) return;
 
-    const bearing = normaliseAngle(Math.atan2(dy, dx));
-    const turn = shortestTurn(this.angleOfShip, bearing);
+    const aim = normaliseAngle(Math.atan2(dy, dx));
+    const turn = shortestTurn(this.angleOfShip, aim);
 
-    if (Math.abs(turn) <= TURN_RATE) this.angleOfShip = bearing;
+    if (Math.abs(turn) <= TURN_RATE) this.angleOfShip = aim;
     else this.angleOfShip += Math.sign(turn) * TURN_RATE;
   }
 
